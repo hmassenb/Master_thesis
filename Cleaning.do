@@ -6,6 +6,7 @@ clear all
 cd "C:\Users\Hannah\Documents\Thesis"
 use "C:\Users\Hannah\Documents\Thesis\data\selected years selected\ESS-Data-Wizard-subset-2023-02-07.dta"
 
+
 * labelling 
 rename brncntr birthplace
 rename ctzcntr citizenship
@@ -49,7 +50,15 @@ drop regionat regionbe regionbg regioach regioncy regioncz regioacz regiondk reg
 
 drop inwyr inwyye ipjbhin ipjbini ipjbprm ipjbscr ipjbtro ipjbwfm jbcoedu jbedyrs jblrn smblvjb truinwk uemp3y wkjbndm yrcremp jbintr jbstrs lotsgot lrnnew plprftr stfjb stflfsf stfsdlv smbtjoba stfjbot stfmjob
 
-drop if yrbrn < 1980 
+
+************************************************
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+STOPPED HERE 
+gen age = 0
+replace age = ESS ROUND (YEAR) - Birthyear
+drop if yrbrn < 1980 // people have 20 years after joining labor force where they are still more flexible ADOPTING IT TO EACH YEAR AND ALLOWING FOR UP TO 45 years
+
+
 drop if yrbrn == .a 
 drop if yrbrn == .b
 * drop if rtrd == 1, weirdly there exist individuals that are already retired even though they are born until 2003????
@@ -59,6 +68,8 @@ save data0702.dta, replace
 
 
 * categorization
+
+
 
 
 * notes
