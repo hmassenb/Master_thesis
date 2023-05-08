@@ -2,6 +2,18 @@
 ** Matching **
 ***************
 ************************
+
+* From now on saving datasets in data!
+global ess "C:\Users\Hannah\Documents\Thesis\data"
+clear all
+use "$ess\cleandata.dta"
+
+
+
+
+
+
+things to consider{
 ** within industry!
 ** within year!
 ** within country!
@@ -10,5 +22,9 @@
 *2. sex, age 
 *what else? 
 *dscrgrp belongs to discriminated group within country -> unclear how consitutes
+}
 
-teffects psmatch (heduc) (fa_heduc mo_heduc citizenship sex )
+********************************
+****** Propensity matching ***** https://www.stata.com/manuals/teteffectsintro.pdf#teteffectsintro
+*********************************
+teffects psmatch (occu_risk) (heduc X )

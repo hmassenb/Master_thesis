@@ -52,16 +52,6 @@ drop inwyr inwyye ipjbhin ipjbini ipjbprm ipjbscr ipjbtro ipjbwfm jbcoedu jbedyr
 
 
 ************************************************
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-STOPPED HERE 
-gen age = 0
-replace age = ESS ROUND (YEAR) - Birthyear
-drop if yrbrn < 1980 // people have 20 years after joining labor force where they are still more flexible ADOPTING IT TO EACH YEAR AND ALLOWING FOR UP TO 45 years
-
-
-drop if yrbrn == .a 
-drop if yrbrn == .b
-* drop if rtrd == 1, weirdly there exist individuals that are already retired even though they are born until 2003????
 
 
 save data0702.dta, replace
