@@ -50,6 +50,14 @@ drop regionat regionbe regionbg regioach regioncy regioncz regioacz regiondk reg
 
 drop inwyr inwyye ipjbhin ipjbini ipjbprm ipjbscr ipjbtro ipjbwfm jbcoedu jbedyrs jblrn smblvjb truinwk uemp3y wkjbndm yrcremp jbintr jbstrs lotsgot lrnnew plprftr stfjb stflfsf stfsdlv smbtjoba stfjbot stfmjob
 
+* Which countries are consistent essround >=6
+tab  cntry essround
+list cntry 
+local drop_cntry ///
+"AL" "AT" "BG" "CY" "DK" "GR" "HR" "IS" "IT" "LU" "LV" "ME" "RO" "RS" "RU" "SK" "TR" "UA" "XK"
+
+drop if cntry == "AL" | cntry == "AT" | cntry == "BG"  | cntry == "CY"  | cntry ==  "DK" | cntry == "GR" | cntry == "HR" | cntry == "IS" | cntry == "IT"  | cntry == "LU" | cntry == "LV" | cntry == "ME" | cntry == "RO" | cntry == "RS" | cntry == "RU" | cntry == "SK" | cntry == "TR" | cntry == "UA"| cntry == "XK" 
+
 
 ************************************************
 

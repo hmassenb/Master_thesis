@@ -3,6 +3,8 @@
 ************************
 clear all
 use "C:\Users\Hannah\Documents\Thesis\data\data0702.dta"
+global ess "C:\Users\Hannah\Documents\Thesis\data"
+
 
 gen year = 99999
 replace year = 2004 if essround == 2
@@ -52,10 +54,5 @@ replace mo_heduc = 0 if mo_higheducb >= 5555
 }
 
 
-* Creating 1 occupation
-gen occu = 0
-replace occu = occupation_typea if year < 2012
-replace occu = occupation_typeb if year >= 2012
-replace occu =  99999 if occu == .a 
-
+save "$ess\data1105.dta", replace
 

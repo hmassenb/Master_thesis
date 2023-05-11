@@ -1,3 +1,31 @@
+* Tasking using newest data
+//Insert path for all final datasets which are ready to use
+global ess "C:\Users\Hannah\Documents\Thesis\data"
+global onetnew "C:\Users\Hannah\Documents\Thesis\data\Onetnew"
+*new source downloaded at https://www.onetcenter.org/database.html
+
+clear all
+use "$ess\data1105.dta" // From 2. Creating
+
+iscogen isco08 = isco08(occupation_typea), from(isco88) // only 55 went unmatched
+replace isco08 = occupation_typeb if essround >5
+drop if isco08 == .
+drop if isco08 == .a  
+drop if isco08 == .b 
+drop if isco08 == .c 
+drop if isco08 == .d 
+* 23260 obs had been dropped
+* 65809 obs left
+
+* merge with prepared "$output\isco08.dta"
+merge m:1 isco08 using "$ess\isco08.dta"
+tab essround _merge
+drop if _merge == 1 // 11228 get dropped and still same pattern that until essround 6 way more unmatched
+
+sort essround // pattern that unmatched esspecially in essround <6 
+
+save "$ess\datatask.dta", replace
+
 
 clear all 
 use "$ess\datatask.dta"
@@ -53,6 +81,3 @@ egen NRM_std = std(NRM)
 
 
 save "$ess\categorizeddata.dta", replace
-
-* keep isco08 NRA NRI RC RM NRM NRA_std NRI_std RC_std RM_std NRM_std
-* save "$output\datatomergewithess.dta", replace

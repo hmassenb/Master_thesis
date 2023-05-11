@@ -26,6 +26,8 @@ global crosswalks "C:\Users\Hannah\Documents\Thesis\all about merge and prep tas
 //insert the path for your output files (the do-file will create several .dta files along the way - one for each classification).
 global output "C:\Users\Hannah\Documents\Thesis\all about merge and prep task"
 
+//Insert path for all final datasets which are ready to use
+global ess "C:\Users\Hannah\Documents\Thesis\data"
 
 {
 //save the data in .dta format.
@@ -82,7 +84,7 @@ reshape wide score, i(onetsoccode) j(elementid) string
 //simplify names
 renpfix score t_ // replace all "score" with t_ 
 
-save "$source\transformed_soc10.dta"
+save "$source\transformed_soc10.dta", replace
 
 
 
@@ -123,10 +125,11 @@ save "$output\isco08.dta", replace
 ******************************************************************************************************************************************************
 * Crosswalk from isco88 to isco08
 ** Destring the variables which are used to joinby since they are stringed
-
+{
 use "$crosswalks\isco88_soc00"
 destring isco88, replace
 save "$crosswalks\isco88_soc00_destring.dta", replace 
+use "$crosswalks\isco88_soc00_destring.dta"
 
 use "$crosswalks\soc00_soc10", clear
 destring soc2000, replace
@@ -139,41 +142,41 @@ use "$crosswalks\soc10_isco08", clear
 destring soc10, replace
 save "$crosswalks\soc10_isco08_destring.dta", replace
 
-use "$crosswalks\"
-
-global ess "C:\Users\Hannah\Documents\Thesis\data"
 clear all
-use "$ess\cleandata.dta"
+use "$crosswalks\isco88_soc00_destring.dta" 
+merge m:m soc00 using "$crosswalks\soc00_soc10_destring"
+drop _merge 
+merge m:m soc10 using "$crosswalks\soc10_isco08_destring.dta" 
+drop _merge 
+drop if isco88 == . 
+drop soc00 soc10
+
+save "$crosswalks\isco88_isco08.dta", replace
+}
 
 
-gen isco88 = occupation_typea
-drop if isco88 == .a 
-drop if isco88 == .b
-drop if isco88 == .c
-drop if isco88 == .d
+***************************************************************************
+*** Merging isco88 -> isco08 into master dataset : ISCOGEN
+***************************************************************************
 
-replace isco
+clear all
+use "$ess\data1105.dta"
 
-destring isco88, replace
-	joinby isco88 using "$crosswalks\isco88_soc00_destring.dta" 
-isco88 to soc00 
-soc00 to soc10
-soc 10 to isco08
+iscogen isco08 = isco08(occupation_typea), from(isco88) // only 55 went unmatched
+replace isco08 = occupation_typeb if essround >5
+drop if isco08 == .
+drop if isco08 == .a  
+drop if isco08 == .b 
+drop if isco08 == .c 
+drop if isco08 == .d 
+* 23260 obs had been dropped
+* 65809 obs left
 
+* merge with prepared "$output\isco08.dta"
+merge m:1 isco08 using "$output\isco08.dta"
+drop if _merge == 1 // drops 11333 which are all unmatched and not found classified by the work activities and context (which are based on the O*net classification and especially the newer isco08 jobs are not represented by the O*net)
 
+sort essround // pattern that unmatched esspecially in essround <6 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+save "$ess\datataskOLD.dta", replace
 
