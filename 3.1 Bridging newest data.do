@@ -1,14 +1,10 @@
 * Bridging new
 clear all
 global onetnew "C:\Users\Hannah\Documents\Thesis\data\Onetnew"
-
-//insert the path to your crosswalks directory.
 global crosswalks "C:\Users\Hannah\Documents\Thesis\all about merge and prep task"
-
-//Insert path for all final datasets which are ready to use
 global ess "C:\Users\Hannah\Documents\Thesis\data"
 
-MAYBE ADDING ABILITY SHEET SINCE ACEMOGLUS CLASSIFICATION CONSIDERS 1.A which is probably in the Ability file 
+{
 *import excel using "$onetnew\\Occupation Data.xlsx", firstrow clear
 *	rename *, lower // lower makes all letters small
 *save "$onetnew\\occupation.dta", replace
@@ -21,6 +17,10 @@ MAYBE ADDING ABILITY SHEET SINCE ACEMOGLUS CLASSIFICATION CONSIDERS 1.A which is
 *	rename *, lower // lower makes all letters small
 *save "$onetnew\\Work Context.dta", replace
 
+*import excel using "$onetnew\\Abilities.xlsx", firstrow clear
+*	rename *, lower // lower makes all letters small
+*save "$onetnew\\Abilities.dta", replace
+}
 
 clear all
 use "$onetnew\occupation"  
@@ -28,6 +28,7 @@ use "$onetnew\occupation"
 
 append using "$onetnew\Work Context.dta", keep(scaleid datavalue onetsoccode elementid)
 append using "$onetnew\Work Activities.dta", keep(scaleid datavalue onetsoccode elementid)
+append using "$onetnew\\Abilities.dta", keep(scaleid datavalue onetsoccode elementid)
 
 //keep only the needed measurements 
 keep if scaleid=="IM" | scaleid=="CX" // importance ranking "Not Important" (1) to "Extremely Important" (5)
@@ -68,7 +69,7 @@ save "$onetnew\soc10NEW.dta", replace
 
 
 //from SOC 10 to ISCO-08
-use "$onetnew\soc10.dta", clear
+use "$onetnew\soc10NEW.dta", clear
 destring soc10_short, replace
 drop soc10
 rename soc10_short soc10
@@ -78,3 +79,62 @@ rename soc10_short soc10
 *renpfix t_ ""
 	
 save "$ess\isco08.dta", replace
+
+*****************************
+*** Technology augmention ***
+*****************************
+clear all
+import excel using "$onetnew\\Technology Skills.xlsx", firstrow clear
+rename *, lower // lower makes all letters small
+gen hot = 0 
+replace hot = 1 if hottech == "Y"
+gen demand = 0 
+replace demand = 1 if indemand == "Y"
+
+save "$onetnew\\technology.dta", replace
+
+clear all
+use "$onetnew\occupation"  
+append using "$onetnew\\technology.dta", keep(onetsoccode hot demand)
+
+drop if hot == . 
+drop title description
+sort onetsoccode
+rename onetsoccode soc10
+*replace soc10=subinstr(soc10, ".", "", .)
+gen soc10_short = substr(soc10, 1, strpos(soc10, ".")-1) 
+replace soc10_short = subinstr(soc10_short, "-", "", .) 
+
+destring soc10_short, replace
+drop soc10
+rename soc10_short soc10
+	joinby soc10 using "$crosswalks\soc10_isco08.dta" 
+	collapse (mean) hot demand, by(isco08) 
+	
+egen hot_std = std(hot)
+egen demand_std = std(demand)
+	
+
+save "$ess\hotdemand.dta", replace
+
+
+clear all
+use "$ess\data1105.dta" // From 2. Creating
+
+iscogen isco08 = isco08(occupation_typea), from(isco88) // only 55 went unmatched
+replace isco08 = occupation_typeb if essround >5
+drop if isco08 == .
+drop if isco08 == .a  
+drop if isco08 == .b 
+drop if isco08 == .c 
+drop if isco08 == .d 
+
+merge m:1 isco08 using "$ess\hotdemand.dta"
+
+twoway kdensity hot if heduc == 1 || kdensity hot if heduc == 0
+twoway kdensity hot_std if heduc == 1 || kdensity hot_std if heduc == 0
+ttest hot, by(heduc)
+ttest demand, by(heduc)
+
+save "$ess\\hotmerge.dta"
+

@@ -5,7 +5,7 @@
 clear all 
 cd "C:\Users\Hannah\Documents\Thesis"
 use "C:\Users\Hannah\Documents\Thesis\data\selected years selected\ESS-Data-Wizard-subset-2023-02-07.dta"
-
+global ess "C:\Users\Hannah\Documents\Thesis\data"
 
 * labelling 
 rename brncntr birthplace
@@ -37,7 +37,7 @@ rename hinctnta hh_netincome
 rename isco08 occupation_typeb // since ESS 6
 rename iscoco occupation_typea // until ESS 5
 
-drop edition proddate dweight pspwght pweight anweight prob stratum psu pdwrkcr uemp12m uemp3m uemp5yr
+drop edition proddate dweight pspwght pweight anweight prob stratum psu pdwrkcr uemp12m uemp3m uemp5yr nacer11
 
 *Discrimination variables
 drop dscrage dscrdk dscrdsb dscretn dscrgnd dscrlng dscrna dscrnap dscrntn dscroth dscrrce dscrref dscrrlg dscrsex language1 language2 age ancestor1 ancestor2 training chldhhe chldhm crpdwk
@@ -50,22 +50,19 @@ drop regionat regionbe regionbg regioach regioncy regioncz regioacz regiondk reg
 
 drop inwyr inwyye ipjbhin ipjbini ipjbprm ipjbscr ipjbtro ipjbwfm jbcoedu jbedyrs jblrn smblvjb truinwk uemp3y wkjbndm yrcremp jbintr jbstrs lotsgot lrnnew plprftr stfjb stflfsf stfsdlv smbtjoba stfjbot stfmjob
 
+*********************************
+** Time and country constraint
+********************************* 
 * Which countries are consistent essround >=6
 tab  cntry essround
 list cntry 
 local drop_cntry ///
 "AL" "AT" "BG" "CY" "DK" "GR" "HR" "IS" "IT" "LU" "LV" "ME" "RO" "RS" "RU" "SK" "TR" "UA" "XK"
 
-drop if cntry == "AL" | cntry == "AT" | cntry == "BG"  | cntry == "CY"  | cntry ==  "DK" | cntry == "GR" | cntry == "HR" | cntry == "IS" | cntry == "IT"  | cntry == "LU" | cntry == "LV" | cntry == "ME" | cntry == "RO" | cntry == "RS" | cntry == "RU" | cntry == "SK" | cntry == "TR" | cntry == "UA"| cntry == "XK" 
+drop if cntry == "AL" | cntry == "AT" | cntry == "BG"  | cntry == "CY"  | cntry ==  "DK" | cntry == "GR" | cntry == "HR" | cntry == "IS" | cntry == "IT"  | cntry == "LU" | cntry == "LV" | cntry == "ME" | cntry == "RO" | cntry == "RS" | cntry == "RU" | cntry == "SK" | cntry == "TR" | cntry == "UA"| cntry == "XK" | cntry == "IL"
 
 
-************************************************
-
-
-save data0702.dta, replace
-
-
-* categorization
+save "$ess\data0702.dta", replace
 
 
 

@@ -2,9 +2,8 @@
 ** Creating variables **
 ************************
 clear all
-use "C:\Users\Hannah\Documents\Thesis\data\data0702.dta"
 global ess "C:\Users\Hannah\Documents\Thesis\data"
-
+use "$ess\data0702.dta"
 
 gen year = 99999
 replace year = 2004 if essround == 2
