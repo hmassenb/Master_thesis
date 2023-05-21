@@ -49,7 +49,7 @@ save "$onetnew\transformed_soc10.dta", replace
 
 
 {
-//some correction for the calculation of task contents (scale reversion of selected items) DONT KNOW YET WHAT THIS DO
+//some correction for the calculation of task contents (scale reversion of selected items) 
 * gen t_4C3b8_rev=6-t_4C3b8
 * gen t_4C1a2l_rev=6-t_4C1a2l
 * gen t_4C2a3_rev=6-t_4C2a3

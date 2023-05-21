@@ -23,15 +23,14 @@ things to consider{
 ********************************
 ****** Propensity matching ***** https://www.stata.com/manuals/teteffectsintro.pdf#teteffectsintro
 *********************************
-tabstat ratio mo_iscedhigheduc sex citizenship, by(heduc) stat(mean median sd min max n) col(stat) long 
+tabstat mo_iscedhigheduc sex citizenship age, by(heduc) stat(mean median sd min max n) col(stat) long
 
-by t, sort : summarize ratio mo_iscedhigheduc sex citizenship
+by t, sort : summarize  mo_iscedhigheduc sex citizenship age
 ttest ratio, by(heduc)
 
 egen double_cluster=group(cntry nacer2)
-regress ratio heduc , vce(cluster double_cluster)
+regress ratio heduc sex age mo_iscedhigheduc , vce(cluster double_cluster)
 
-logit 
 *********
 ** ATE ** 
 *********

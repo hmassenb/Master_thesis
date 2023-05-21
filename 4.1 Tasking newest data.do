@@ -24,6 +24,10 @@ drop if isco08 == .d
 merge m:1 isco08 using "$ess\isco08.dta"
 
 
+
+ 
+ 
+
 **************************
 **** TIME CONSTRAINT *****
 **************************
@@ -31,6 +35,7 @@ tab essround _merge // pattern emerges that before round 6 there had been around
 drop if _merge == 1 // 11228 get dropped and still same pattern that until essround 6 way more unmatched
 sort essround 
 drop if essround <6
+drop if age <= 24
 
 save "$ess\datatask.dta", replace
 
@@ -57,7 +62,7 @@ save "$ess\datatask.dta", replace
 
 
 global basevar ///
-essround idno cntry birthplace citizenship dscrgrp fa_samebirthplace fa_birthplace mo_birthplace mo_samebirthplace sex educ_subject highest_educa highest_educb fa_higheduca fa_higheducb mo_higheduca mo_higheducb educ_year isced_higheduc fa_iscedhigheduc mo_iscedhigheduc employment_type incomesource hh_netincome tporgwk wkhct wkhtot nacer11 nacer2 region jbtsktm netpay stdhrsw stdlvl stdmcdo trndnjb wkovrtm yrskdwk yrspdwk lrnntlf plinsoc yrbrn age heduc fa_heduc mo_heduc isco08 
+essround idno cntry birthplace citizenship dscrgrp fa_samebirthplace fa_birthplace mo_birthplace mo_samebirthplace sex educ_subject   educ_year isced_higheduc fa_iscedhigheduc mo_iscedhigheduc employment_type incomesource hh_netincome tporgwk wkhct wkhtot nacer2 region lrnntlf plinsoc yrbrn age heduc fa_heduc mo_heduc isco08 
 
 
 keep $basevar t_4A2a4 t_4A2b2 t_4A4a1 t_4A4a4 t_4A4b4 t_4A4b5 t_4C3b7 t_4C3b4 t_4C3b8 t_4C3d3 t_4A3a3 t_4C2d1i t_4A3a4 t_4C2d1g t_1A2a2 t_1A1f1
@@ -86,58 +91,42 @@ egen RC_std = std(RC)
 egen RM_std = std(RM)
 egen NRM_std = std(NRM)
 
-tab NRA hh_netincome
 
 
 *********************************
 * Creating ratio of automatizability 
 ****************************************
-gen ratio = (NRA+NRI+NRM+RC) / RM
-egen ratio_std = std(ratio)
-
+gen ratio = (NRA+NRI+NRM) / (RM + RC)
 ttest ratio, by(heduc)
 
+twoway scatter ratio isco08 || qfit ratio isco08
+egen ratio_std = std(ratio)
+ttest ratio_std, by(heduc)
+
+reg ratio_std heduc age sex mo_iscedhigheduc
+
+
+**********************************************
+** Creating share of risk to automatization **
+**********************************************
+egen sumtask = rowtotal(NRM NRA NRI RC RM)
+gen shareatrisk = (RM+RC) / sumtask
+egen shareatrisk_std = std(shareatrisk)
+ttest shareatrisk_std, by(heduc)
+
+twoway scatter shareatrisk isco08 || qfit shareatrisk isco08
+reg shareatrisk heduc age sex mo_iscedhigheduc
+
+twoway scatter shareatrisk_std isco08 || qfit shareatrisk_std isco08
+reg shareatrisk_std  heduc age sex mo_iscedhigheduc
 
 save "$ess\categorizeddata.dta", replace
+
 
 
 ******************
 *** Technology ***
 ******************
-HAVE TO MERGE HOT TO ORIGINAL DATASET AFTER PERFORMING WORK CONTEXT ABILITY STEPS
-clear all 
-use "$ess\\hotmerge.dta"
-
-global basevar ///
-essround idno cntry birthplace citizenship dscrgrp fa_samebirthplace fa_birthplace mo_birthplace mo_samebirthplace sex educ_subject highest_educa highest_educb fa_higheduca fa_higheducb mo_higheduca mo_higheducb educ_year isced_higheduc fa_iscedhigheduc mo_iscedhigheduc employment_type incomesource hh_netincome tporgwk wkhct wkhtot nacer11 nacer2 region jbtsktm netpay stdhrsw stdlvl stdmcdo trndnjb wkovrtm yrskdwk yrspdwk lrnntlf plinsoc yrbrn age heduc fa_heduc mo_heduc isco08 
-
-
-keep $basevar t_4A2a4 t_4A2b2 t_4A4a1 t_4A4a4 t_4A4b4 t_4A4b5 t_4C3b7 t_4C3b4 t_4C3b8 t_4C3d3 t_4A3a3 t_4C2d1i t_4A3a4 t_4C2d1g t_1A2a2 t_1A1f1
-
-
-* creating a variable which display the average of importance of the task for this occupation. However, I worry about the averaging effect, but might look into ace's 2011 what they did
-gen NRA = 0 // non-routine analytical 
-replace NRA = (t_4A2a4 + t_4A2b2 + t_4A4a1)/ 3
-
-gen NRI = 0 // non-routine interpersonal
-replace NRI = (t_4A4a4 + t_4A4b4 + t_4A4b5)/ 3
-
-gen RC = 0 // Routine cognitive 
-replace RC = (t_4C3b7 + t_4C3b4 + t_4C3b8)/ 3
-
-gen RM = 0 // Routine manual
-replace RM = (t_4C3d3 + t_4A3a3 + t_4C2d1i) / 3
-
-gen NRM = 0 // non-routine manual 
-replace NRM = (t_4A3a4 + t_4C2d1g + t_1A2a2 + t_1A1f1) / 3
-
-* Acemoglu and Autor use standardized version p.1164 
-egen NRA_std = std(NRA)
-egen NRI_std = std(NRI)
-egen RC_std = std(RC)
-egen RM_std = std(RM)
-egen NRM_std = std(NRM)
-
 
 
 
