@@ -34,11 +34,19 @@ replace heduc = 1 if isced_higheduc >= 5
 
 ** Father heduc
 gen fa_heduc = 0 
-replace fa_heduc = 1 if fa_higheduca >= 5 
+replace fa_heduc = 1 if fa_higheducb >= 500 
+replace fa_heduc = 0 if fa_higheducb >= 5000
 
 ** Mother heduc
 gen mo_heduc = 0 
-replace mo_heduc = 1 if mo_higheduca >= 5 
+replace mo_heduc = 1 if mo_higheducb >= 500
+replace mo_heduc = 1 if mo_higheducb >= 5000
+
+** Creating country numeric identifier 
+egen country = group(cntry)
+labmask country, values(cntry)
+
+** Creating country averages of RTI depending on heduc 
 
 save "$ess\data1105.dta", replace
 
