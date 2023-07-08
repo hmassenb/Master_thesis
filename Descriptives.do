@@ -1,7 +1,7 @@
 ******************
 ** Descriptives **
 ******************
-setwd 
+
 global ess "C:\Users\Hannah\Documents\Thesis\data"
 use "$ess\data0407.dta"
 
@@ -15,13 +15,6 @@ use "$ess\data0407.dta"
  
  */
 
-* no obs as rti was string
-destring rti, replace
-destring nra, replace
-destring nrm, replace
-destring nri, replace
-destring rc, replace
-destring rm, replace
 
 graph bar heduc, over(cntry) sort(heduc)
 graph bar rti, over(cntry)
