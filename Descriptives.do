@@ -16,7 +16,7 @@ destring rc, replace
 destring rm, replace
 
 * Distribution of higher educ 
-graph bar heduc, over(cntry) sort(heduc) 
+graph bar heduc, over(cntry, sort(heduc) descending) 
 
 
 tabstat heduc citizenship, by(cntry) stat(mean sd) col(varia) nototal
@@ -119,6 +119,7 @@ local higheducation
 
 
 // Calculate the difference between high and non-high means
+##########################################################
 local age sex nacer2 mo_heduc rti nra nri nrm rc rm
 
 egen mean_age1 = mean(age) if heduc == 1 
@@ -154,18 +155,6 @@ esttab total nonhigh high using table2.tex, replace main(mean  %6.2f) aux(sd) mt
 
 // Calculate the difference between high and non-high means
 eststo diff, title("Difference") 
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
