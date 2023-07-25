@@ -3,7 +3,9 @@
 ************************
 clear all
 global ess "C:\Users\Hannah\Documents\Thesis\data"
-use "$ess\data0702.dta"
+use "$ess\data0702.dta" // From 1.Cleaning
+cd "C:\Users\Hannah\Documents\Thesis\data"
+
 
 gen year = 99999
 replace year = 2004 if essround == 2
@@ -23,12 +25,12 @@ drop if yrbrn == .b
 
 gen age = year - yrbrn
 
-drop if age > 60
+drop if age > 60 // dropping people who drop out of labor market
+drop if age < 25 // dropping people who have not entered labor market
 }
 
 
 * Creating heduc related 
-
 gen heduc = 0
 replace heduc = 1 if isced_higheduc >= 5
 
@@ -46,39 +48,10 @@ replace mo_heduc = 1 if mo_higheducb >= 5000
 egen country = group(cntry)
 labmask country, values(cntry)
 
+** Creating change of RTI (2012-2018)
+// within country, within occu? 
+* egen
+
+
 save data0702i
-clear all 
-use data0702i
-* string problem for further computations
-destring rti, replace
-destring nra, replace
-destring nrm, replace
-destring nri, replace
-destring rc, replace
-destring rm, replace
-
-** Creating country averages of RTI depending on heduc 
-country ///
- BE  CH  CZ DE EE ES FI FR HU GB IE LT NL NO PL PT SE  SI 
-         
-levelsof heduc, local(levels)    
-        
-gen rti_avg = . 
-gen nra_avg = . 
-gen nrm_avg = . 
-gen rc_avg = . 
-gen rm_avg = . 
-
-foreach cou in $country{
-	foreach val of heduc{
-	replace rti_avg = mean(rti) if country==`cou' & heduc==`val'
-	replace nra_avg = mean(nra) if country==`cou' & heduc==`val'
-	replace nrm_avg = mean(nrm) if country==`cou' & heduc==`val'
-	replace nri_avg = mean(nri) if country==`cou' & heduc==`val'
-	replace rc_avg = mean(rc)   if country==`cou' & heduc==`val'
-	replace rm_avg = mean(rm)   if country==`cou' & heduc==`val'
-}
-}
-
-save "$ess\data1105.dta", replace
 
