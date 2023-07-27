@@ -32,7 +32,7 @@ eststo e2012: reghdfe rti country##heduc age sex mo_heduc if year == 2012, absor
 *dis `country##heduc'
 
 margins country, dydx(heduc) atmeans noestimcheck post
-marginsplot, recast(line) name(graph12, replace) title("2012") yline(-0.2)
+quietly marginsplot, recast(line) name(graph12, replace) title("2012") yline(-0.2)
 
 * 2014
 eststo e2014: reghdfe rti country##heduc age sex mo_heduc if year == 2014, absorb(country) vce(cluster nacer2 country) 
@@ -76,6 +76,9 @@ global betasofcountries ///
 	14.country#1.heduc 15.country#1.heduc 16.country#1.heduc ///
 	17.country#1.heduc 18.country#1.heduc
 	
+	
+*********
+* Trying to extract betas into new var
 gen betas = . 
 levelsof country, local(countrycodes) //18
 foreach countrycode of local countrycodes {
@@ -83,8 +86,6 @@ foreach countrycode of local countrycodes {
     local beta_value = r(mean)
     replace betas = `beta_value' if country == "`countrycode'"
 }
-
-
 
 
 twoway box heduc year, over(country)

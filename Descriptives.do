@@ -16,6 +16,8 @@ destring rc, replace
 destring rm, replace
 
 * Distribution of higher educ 
+{
+	
 graph bar heduc, over(cntry, sort(heduc) descending) 
 
 
@@ -99,13 +101,19 @@ sort country
 twoway line avg_rti heduc, by(country)
 graph hbar avg_rti, by(country) over(heduc)
 corr rti heduc
+}
  
+ 
+ 
+* Occuption composition within industries 
+graph bar rti, over(nacer2) by(year)
+  
 **************************************************
 cd  "C:\Users\Hannah\Documents\Thesis\tables"
 summarize age sex nacer2 mo_heduc rti nra nri nrm rc rm  
 estpost summarize age sex nacer2 mo_heduc rti nra nri rc rm nrm 
 eststo total
-r(mean)
+
 
 summarize  age sex nacer2 mo_heduc rti nra nri nrm rc rm if heduc == 0
 estpost summarize age sex nacer2 mo_heduc rti nra nri rc rm nrm if heduc == 0
@@ -119,51 +127,37 @@ local higheducation
 
 
 // Calculate the difference between high and non-high means
-##########################################################
-local age sex nacer2 mo_heduc rti nra nri nrm rc rm
+global cov ///
+age sex nacer2 mo_heduc rti nra nri nrm rc rm
 
-egen mean_age1 = mean(age) if heduc == 1 
-tab mean_age1
-replace mean_age1 = 42.33165 if mean_age1==.
-egen mean_age0 = mean(age) if heduc == 0 
-tab mean_age0
-replace mean_age0 =  44.53202  if mean_age0==.
+foreach var in $cov{
+	egen mean_`var'_1 = mean(`var') if heduc == 1
+	egen mean_`var'_0 = mean(`var') if heduc == 0
+	replace mean_`var'_1= mean_`var'_1[_n-1] if mean_`var'_1==.
+	replace mean_`var'_1= mean_`var'_1[_n+1] if mean_`var'_1==.
+	replace mean_`var'_0= mean_`var'_0[_n-1] if mean_`var'_0==.
+	replace mean_`var'_0= mean_`var'_0[_n+1] if mean_`var'_0==.
+}
 
-gen diff_age = mean_age1 - mean_age0
-tab diff_age
+foreach var in $cov{
+		gen diff_mean_`var' = mean_`var'_1 - mean_`var'_0
+}
 
-// Calculate the mean difference
-gen mean_age_1_minus_mean_age_0 = mean_age_1 - mean_age_0
+global diffmeancov ///
+diff_mean_age diff_mean_sex diff_mean_nacer2 diff_mean_mo_heduc diff_mean_rti diff_mean_nra diff_mean_nri diff_mean_nrm diff_mean_rc diff_mean_rm
 
-global Differences ///
-diff_mean_age diff_mean_sex diff_mean_nacer2 diff_mean_mo_heduc diff_mean_rti ///
-diff_mean_nra diff_mean_nri diff_mean_nrm diff_mean_rc diff_mean_rm
-
+summarize  $diffmeancov
+estpost summarize $diffmeancov
+eststo diff
+local diff
 
 // Now use esttab to create the table with the new difference row
-esttab total nonhigh high, matrix(diff_mean) cells("mean(fmt(%6.2f))") label ///
-    collabels("Total" "Non-High" "High" "Difference") ///
-    varlabels(age sex nacer2 mo_heduc rti nra nri nrm rc rm) ///
+esttab total nonhigh high diff using descri.tex, replace ///
+	cells("mean(fmt(%6.2f))") label ///
+    mtitles("Total" "Non-High" "High" "Difference") ///
     title("Comparison of Means") ///
-    stats(N r2_a, labels("Observations" "R-squared")) ///
+    stats(N  labels("Observations")) ///
     nonum
-
-
-esttab total nonhigh high using table2.tex, replace main(mean  %6.2f) aux(sd) mtitles("Total" "Non-High" "High")
-
-
-
-// Calculate the difference between high and non-high means
-eststo diff, title("Difference") 
-
-
-
-
-
-
-
-
-
 
 
 
