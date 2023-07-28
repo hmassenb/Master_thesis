@@ -48,10 +48,16 @@ replace mo_heduc = 1 if mo_higheducb >= 5000
 egen country = group(cntry)
 labmask country, values(cntry)
 
+* creating age groups 
+gen age_groups = . 
+replace age_groups = 1 if age <= 35 //27%
+replace age_groups = 2 if age > 36 & age <= 50 //41%
+replace age_groups = 3 if age > 50 // 31%
+
 ** Creating change of RTI (2012-2018)
 // within country, within occu? 
 * egen
 
 
-save data0702i
+save data0702i, replace
 

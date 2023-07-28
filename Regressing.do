@@ -5,6 +5,7 @@ clear all
 global ess "C:\Users\Hannah\Documents\Thesis\data"
 use "$ess\data0407.dta" // from 4.2 Tasking mihaylov table
 cd "C:\Users\Hannah\Documents\Thesis"
+set scheme s1mono
 
 ******************************
 * destring variables
@@ -16,15 +17,104 @@ destring nri, replace
 destring rc, replace
 destring rm, replace
 
+*****************************
+** 8 Regressions 
 ****************************************
-statsby, by(country): reg heduc age fa_heduc birthplace
-reg heduc fa_heduc mo_heduc birthplace  dscrgrp fa_samebirthplace mo_samebirthplace, cluster(cntry) 
-reg heduc fa_heduc sex birthplace citizenship dscrgrp fa_samebirthplace mo_samebirthplace c.incomesource, cluster(cntry) 
+{
+**** Very basic reg
+*************************
+eststo reg1: reg rti heduc  
+eststo reg1fe: reghdfe rti heduc , absorb(country) vce(cluster nacer2 year)
 
-*******************************************
-reghdfe rti heduc age mo_heduc, absorb(cntry year nacer2)
-* to save estimates include in bracket of absorb in front of variable (newvar=absvar) but accord. manual saved fe can be misleading 
+*************************
+**** Basic reg
+******************************
+eststo reg2: reg rti heduc age sex
+eststo reg2fe: reghdfe rti heduc age sex, absorb(country) vce(cluster nacer2 year)
 
+************************
+**** All cov reg 
+*************************
+eststo reg3: reg rti heduc age sex mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp, vce(cluster country)
+
+eststo reg3fe:reghdfe rti heduc age sex mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp, absorb(country) vce(cluster nacer2 year)
+
+********************
+**** heduc#sex
+*************************
+eststo reg4: reg rti heduc heduc#sex age  mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp
+// in contrast to male with no education women with no heduc have RTI  0,11 higher and male with education have -0,215 vs female with heduc have -0.107 lower RTI 
+
+eststo reg4fe:reghdfe rti heduc heduc#sex age  mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp, absorb(country) vce(cluster nacer2 year)
+
+********************
+***** heduc#age_groups (2.Creating)
+****************************************
+eststo reg5: reg rti heduc heduc#age_groups sex mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp
+// effect gets stronger for oldest age group
+
+eststo reg5fe: reghdfe rti heduc heduc#age_groups sex mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp, absorb(country) vce(cluster nacer2 year)
+
+*************************
+***** heduc#country 
+*************************
+eststo reg6: reg rti heduc heduc#country age sex mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp, coeflegend
+
+* margins country, dydx(heduc) atmeans noestimcheck post
+* marginsplot
+* coefplot reg4, /// 
+	*keep(1.heduc#2.country 1.heduc#3.country 1.heduc#4.country ///
+	*1.heduc#5.country 1.heduc#6.country 1.heduc#7.country ///
+	*1.heduc#8.country 1.heduc#9.country 1.heduc#10.country ///
+	*1.heduc#11.country 1.heduc#12.country 1.heduc#13.country ///
+	*1.heduc#14.country 1.heduc#15.country 1.heduc#16.country ///
+	*1.heduc#17.country 1.heduc#18.country 1.heduc#1b.country) /// 
+	*title(Coefficients) ///
+	*levels(90) xtitle("Coefficients") legend(size(vsmall)) 
+
+* ylabel("CH" "CZ" "DE" "EE" "ES" "FI" "FR" "GB" "HU" "IE" "LT" "NL" "NO" "PL" "PT" "SE" "SI") ///
+
+eststo reg6fe: reghdfe rti heduc heduc#country age sex mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp, noabsorb vce(cluster nacer2 year)
+
+*************************
+***** heduc#year 
+*************************
+eststo reg7: reg rti heduc heduc#year age sex mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp, coeflegend
+
+*************************
+eststo reg7fe: reghdfe rti heduc heduc#year age sex mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp, absorb(country) vce(cluster nacer2 year)
+// over time no clear trend
+
+
+*************************
+***** heduc#nacer2 // way to many industries to be clear
+*************************
+eststo reg8: reg rti heduc heduc#nacer2 age sex mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp
+margins nacer2, dydx(heduc) atmeans noestimcheck post
+marginsplot
+
+eststo reg8fe: reghdfe rti heduc heduc#nacer2 age sex mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp, absorb(country) vce(cluster nacer2 year)
+margins nacer2, dydx(heduc) atmeans noestimcheck post
+marginsplot
+
+
+
+}
+
+
+* no fe
+esttab reg1 reg2 reg3 reg4 reg5 reg6 reg7  using 7reg.tex, replace ///
+mtitle("very basic" "basic" "all covar" "#sex" "#age_groups" "#country" "#year" "#nacer")
+
+* fe
+esttab reg1fe reg2fe reg3fe reg4fe reg5fe reg6fe reg7fe  using 7regfe.tex , replace ///
+mtitle("very basic" "basic" "all covar" "#sex" "#age_groups" "#country" "#year" "#nacer")
+
+
+***********************
+** By year estimation
+***********************
+{
 * 2012
 eststo e2012: reghdfe rti country##heduc age sex mo_heduc if year == 2012, absorb(country) vce(cluster nacer2 country) coeflegend
 *mat list e(b) 
@@ -77,7 +167,7 @@ global betasofcountries ///
 	17.country#1.heduc 18.country#1.heduc
 	
 	
-*********
+******************
 * Trying to extract betas into new var
 gen betas = . 
 levelsof country, local(countrycodes) //18
@@ -102,6 +192,7 @@ esttab e2012 e2014 e2016 e2018 using reg2.tex, ///
 	17.country#1.heduc 18.country#1.heduc) ///
     title("Regression displaying coefficients for each country") replace 
 	
+}
 
 ***********************************************
 ** Sigma Convergence 

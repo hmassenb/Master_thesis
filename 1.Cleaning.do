@@ -50,6 +50,9 @@ drop regionat regionbe regionbg regioach regioncy regioncz regioacz regiondk reg
 
 drop inwyr inwyye ipjbhin ipjbini ipjbprm ipjbscr ipjbtro ipjbwfm jbcoedu jbedyrs jblrn smblvjb truinwk uemp3y wkjbndm yrcremp jbintr jbstrs lotsgot lrnnew plprftr stfjb stflfsf stfsdlv smbtjoba stfjbot stfmjob
 
+* not existent in my chosen years
+drop jbtsktm netpay stdhrsw stdlvl stdmcdo trndnjb wkovrtm yrskdwk yrspdwk educ_subject mo_birthplace fa_birthplace
+
 *********************************
 ** Time and country constraint
 ********************************* 

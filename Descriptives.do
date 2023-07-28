@@ -108,7 +108,9 @@ corr rti heduc
 * Occuption composition within industries 
 graph bar rti, over(nacer2) by(year)
   
-**************************************************
+************************
+** Descriptive table 
+**************************
 cd  "C:\Users\Hannah\Documents\Thesis\tables"
 summarize age sex nacer2 mo_heduc rti nra nri nrm rc rm  
 estpost summarize age sex nacer2 mo_heduc rti nra nri rc rm nrm 
@@ -158,12 +160,49 @@ esttab total nonhigh high diff using descri.tex, replace ///
     title("Comparison of Means") ///
     stats(N  labels("Observations")) ///
     nonum
-
-
-
 *********************************
-graph hbar rti, over(nacer2, label(labsize(tiny))) bargap(1000) 
-tab nacer2 if rti > 0
-tab isco08 if rti > 0
 
-probit 
+*****************************
+** Industry related
+
+graph hbar rti, over(nacer2, label(labsize(tiny))) bargap(1000) 
+twoway kdensity nacer2 if rti > 0, col("red")|| kdensity nacer2 if rti < -0.5 ///
+, title("Distribution of industry dependent on rti value") ///
+note("red: RTI > 0, grey: RTI < -0.5")
+
+
+
+******************************
+** Based on reg7 reg7fe where sex and country seem to display largest impact
+********************************
+twoway kdensity rti if sex == 2, by(country) col("blue")|| kdensity rti if sex == 1, by(country) col("orange")
+
+
+set scheme s2color
+
+twoway (kdensity rti if cntry == "BE") || ///
+(kdensity rti if cntry == "CH") || ///
+(kdensity rti if cntry == "CZ") || ///
+(kdensity rti if cntry == "DE") || ///
+(kdensity rti if cntry == "EE") || ///
+(kdensity rti if cntry == "ES") || ///
+(kdensity rti if cntry == "FI") || ///
+(kdensity rti if cntry == "FR") || ///
+(kdensity rti if cntry == "GB") || ///
+(kdensity rti if cntry == "HU") || ///
+(kdensity rti if cntry == "IE") || ///  
+(kdensity rti if cntry == "LT") || ///
+(kdensity rti if cntry == "NL") || ///
+(kdensity rti if cntry == "PL") || ///
+(kdensity rti if cntry == "NO") || ///
+(kdensity rti if cntry == "PT") || ///
+(kdensity rti if cntry == "SE") || ///
+(kdensity rti if cntry == "SI"), legend(order(1 "BE" 2 "CH" 3 "CZ" 4 "DE" 5 "EE" 6 "ES" 7 "FI" ///
+8 "FR" 9 "GB" 10 "HU" 11 "IE" 12 "LT" 13 "NL" 14 "PL" 15 "NO" 16 "PT" 17 "SE" 18 "SI")) ///
+title("RTI's distribution across countries")
+
+
+
+
+legend(order(1 "BE" 2 "CH))
+
