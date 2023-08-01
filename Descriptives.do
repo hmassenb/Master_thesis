@@ -15,6 +15,7 @@ destring nri, replace
 destring rc, replace
 destring rm, replace
 
+
 * Distribution of higher educ 
 {
 	
@@ -164,6 +165,10 @@ esttab total nonhigh high diff using descri.tex, replace ///
 
 *****************************
 ** Industry related
+graph bar, over(industry, label(labsize(tiny))) by(country)
+graph bar, over(industry_bin, label(labsize(tiny))) by(country)
+destring industry_bins, replace 
+graph bar rti, over(industry_bins)
 
 graph hbar rti, over(nacer2, label(labsize(tiny))) bargap(1000) 
 twoway kdensity nacer2 if rti > 0, col("red")|| kdensity nacer2 if rti < -0.5 ///

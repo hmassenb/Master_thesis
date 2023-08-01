@@ -17,32 +17,35 @@ destring nri, replace
 destring rc, replace
 destring rm, replace
 
-*****************************
-** 8 Regressions 
-****************************************
-{
-**** Very basic reg
-*************************
-eststo reg1: reg rti heduc  
-eststo reg1fe: reghdfe rti heduc , absorb(country) vce(cluster nacer2 year)
-
-*************************
-**** Basic reg
-******************************
-eststo reg2: reg rti heduc age sex
-eststo reg2fe: reghdfe rti heduc age sex, absorb(country) vce(cluster nacer2 year)
-
 ************************
 **** All cov reg 
 *************************
-eststo reg3: reg rti heduc age sex mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp, vce(cluster country)
 
-eststo reg3fe:reghdfe rti heduc age sex mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp, absorb(country) vce(cluster nacer2 year)
+eststo reg1: reg rti heduc age sex mo_heduc birthplace hh_netincome
 
+eststo reg2: reg rti heduc age sex mo_heduc birthplace hh_netincome nacer2  // nacers absorbs a lot! almost -0,1
+
+eststo reg3: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome nacer2, abs(country year)
+
+eststo reg4: reghdfe rti heduc age sex mo_heduc birthplace  industry_bins , abs(country year) vce(cluster year nacer2)
+matrix list e(V)
+estat vce, correlation
+
+
+************************
+**** All cov reg + interaction 
+*************************
+eststo reg5: reghdfe rti heduc heduc#sex age sex mo_heduc birthplace hh_netincome , abs(country year) vce(cluster year)
+
+eststo reg5: reghdfe rti heduc heduc#country age sex mo_heduc birthplace hh_netincome , absorb(year) vce(cluster year)
+
+eststo reg7: reghdfe rti heduc heduc#industry_bins age sex mo_heduc birthplace hh_netincome , abs(country year) vce(cluster year)
+
+{
 ********************
 **** heduc#sex
 *************************
-eststo reg4: reg rti heduc heduc#sex age  mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp
+eststo reg4: reg rti heduc  age  mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp
 // in contrast to male with no education women with no heduc have RTI  0,11 higher and male with education have -0,215 vs female with heduc have -0.107 lower RTI 
 
 eststo reg4fe:reghdfe rti heduc heduc#sex age  mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp, absorb(country) vce(cluster nacer2 year)
@@ -99,7 +102,7 @@ marginsplot
 
 
 
-}
+
 
 
 * no fe
@@ -109,6 +112,8 @@ mtitle("very basic" "basic" "all covar" "#sex" "#age_groups" "#country" "#year" 
 * fe
 esttab reg1fe reg2fe reg3fe reg4fe reg5fe reg6fe reg7fe  using 7regfe.tex , replace ///
 mtitle("very basic" "basic" "all covar" "#sex" "#age_groups" "#country" "#year" "#nacer")
+
+}
 
 
 ***********************

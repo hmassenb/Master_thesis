@@ -54,6 +54,23 @@ replace age_groups = 1 if age <= 35 //27%
 replace age_groups = 2 if age > 36 & age <= 50 //41%
 replace age_groups = 3 if age > 50 // 31%
 
+* creating industry variable st i can see numbers // https://ec.europa.eu/eurostat/documents/3859598/5902521/KS-RA-07-015-EN.PDF.pdf/dd5443f5-b886-40e4-920d-9df03590ff91?t=1414781457000
+gen industry = nacer2
+** numbers have no meaning!
+gen industry_bins = .
+replace industry_bins = 1 if industry <= 3 // "Agriculture, forestry, fishing"
+replace industry_bins = 2  if industry > 3 & industry <= 39 // "Manufacturing, mining and quarrying and other industry"
+replace industry_bins = 3  if industry  > 39 & industry <= 43  // "Construction"
+replace industry_bins = 4  if industry  > 43 & industry <= 56 // "Wholesale and retail trade, transportation and storage, accomodation and food service activities"
+replace industry_bins = 5  if industry  > 56 & industry <= 63 // "Information and communication"
+replace industry_bins = 6  if industry  > 63 & industry <= 66 // "Financial and insurance activities"
+replace industry_bins = 7  if industry  > 66 & industry <= 68 // "Real estate activities "
+replace industry_bins = 8  if industry  > 68 & industry <= 82 // "Professional, scientific, technical, administration and support service activities"
+replace industry_bins = 9  if industry  > 82 & industry <= 88 // "Public administration, defence, education, human health and social work activities "
+replace industry_bins = 10 if industry > 88 & industry <= 93  //  "Arts and entertainment "
+replace industry_bins = 11  if industry > 93 // "Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use, Activities of extra-territorial organisations and bodies"
+
+
 ** Creating change of RTI (2012-2018)
 // within country, within occu? 
 * egen
