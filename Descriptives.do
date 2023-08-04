@@ -206,6 +206,12 @@ twoway (kdensity rti if cntry == "BE") || ///
 8 "FR" 9 "GB" 10 "HU" 11 "IE" 12 "LT" 13 "NL" 14 "PL" 15 "NO" 16 "PT" 17 "SE" 18 "SI")) ///
 title("RTI's distribution across countries")
 
+****************
+** Scatter check 
+*****************
+scatter heduc rti
+qnorm rti
+
 
 
 

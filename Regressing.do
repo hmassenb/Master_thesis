@@ -21,19 +21,37 @@ destring rm, replace
 **** All cov reg 
 *************************
 
-eststo reg1: reg rti heduc age sex mo_heduc birthplace hh_netincome
+quiet eststo reg1: reg rti heduc age sex mo_heduc birthplace  nacer2 
+ predict resid1, residuals
+qnorm resid1, title("distribution of errors")
+ 
+ 
+quiet eststo reg2: reg rti heduc age sex mo_heduc birthplace  nacer2 nacer2  // nacers absorbs a lot! almost -0,1
 
-eststo reg2: reg rti heduc age sex mo_heduc birthplace hh_netincome nacer2  // nacers absorbs a lot! almost -0,1
+quiet eststo reg3: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome nacer2, abs(country year)
 
-eststo reg3: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome nacer2, abs(country year)
+quiet eststo reg4: reghdfe rti heduc age sex mo_heduc birthplace  nacer2 , abs(country year) vce(cluster year nacer2) residuals
+matrix list e(V)
+estat vce, correlation
+ predict resid4, residuals
+qnorm resid1, title("distribution of errors 4")
 
-eststo reg4: reghdfe rti heduc age sex mo_heduc birthplace  industry_bins , abs(country year) vce(cluster year nacer2)
+esttab reg1 reg2 reg3 reg4 using 0408reg.tex, replace
+***************************************************************************
+
+
+**************
+** YEAR BY YEAR with final reg 
+*************************
+reghdfe rti heduc#country age sex mo_heduc birthplace  if year == 2012 , abs(nacer2) vce(cluster nacer2)
+estat hettest  
 matrix list e(V)
 estat vce, correlation
 
 
+
 ************************
-**** All cov reg + interaction 
+**** Interaction 
 *************************
 eststo reg5: reghdfe rti heduc heduc#sex age sex mo_heduc birthplace hh_netincome , abs(country year) vce(cluster year)
 
@@ -100,14 +118,6 @@ eststo reg8fe: reghdfe rti heduc heduc#nacer2 age sex mo_heduc birthplace citize
 margins nacer2, dydx(heduc) atmeans noestimcheck post
 marginsplot
 
-
-
-
-
-
-* no fe
-esttab reg1 reg2 reg3 reg4 reg5 reg6 reg7  using 7reg.tex, replace ///
-mtitle("very basic" "basic" "all covar" "#sex" "#age_groups" "#country" "#year" "#nacer")
 
 * fe
 esttab reg1fe reg2fe reg3fe reg4fe reg5fe reg6fe reg7fe  using 7regfe.tex , replace ///
