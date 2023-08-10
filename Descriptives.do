@@ -20,11 +20,8 @@ destring rm, replace
 {
 	
 graph bar heduc, over(cntry, sort(heduc) descending) 
+graph bar share_heduc, over(country , sort(heduc) descending) // check whether matching of covariates was successful 
 
-
-tabstat heduc citizenship, by(cntry) stat(mean sd) col(varia) nototal
-tabout heduc citizenship  using tablecitizenship.tex, replace ///
- style(tex) 
 
 tabout heduc citizenship sex mo_heduc country using table1.tex, replace ///
 style(tex)   ///
@@ -126,7 +123,7 @@ local nonhigh
 summarize  age sex nacer2 mo_heduc rti nra nri nrm rc rm if heduc == 1
 estpost summarize age sex nacer2 mo_heduc rti nra nri nrm rc rm  if heduc == 1
 eststo high 
-local higheducation
+local high
 
 
 // Calculate the difference between high and non-high means
@@ -155,11 +152,11 @@ eststo diff
 local diff
 
 // Now use esttab to create the table with the new difference row
-esttab total nonhigh high diff using descri.tex, replace ///
+esttab  nonhigh high diff using descri.tex, replace ///
 	cells("mean(fmt(%6.2f))") label ///
     mtitles("Total" "Non-High" "High" "Difference") ///
     title("Comparison of Means") ///
-    stats(N  labels("Observations")) ///
+    stats(N ,labels("Observations")) ///
     nonum
 *********************************
 

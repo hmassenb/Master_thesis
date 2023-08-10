@@ -75,6 +75,33 @@ replace industry_bins = 11  if industry > 93 // "Activities of households as emp
 // within country, within occu? 
 * egen
 
+save data0702ii.dta, replace
+
+*******************
+** STILL ISSUE WITH MATCHING 
+** Adding share of heduc, investment 
+* Preparing covariates data into dta 
+clear all
+import excel "C:\Users\Hannah\Documents\Thesis\data\additional covariates.xlsx", firstrow clear
+keep country year share_heduc RDpcppp shareRD
+
+des country year
+rename country countryy
+encode countryy, gen(country) // country is var i match on an transformed it into a long one instead of string
+drop countryy
+sort  country year
+
+save covariates.dta, replace
+
+
+* Merge covariate.dta with previously defined data data0702ii
+clear all 
+use data0702ii.dta
+drop if year <2012
+
+sort country year
+merge m:1  country year  using covariates.dta, sorted // many unmatched since in this sample still the years 2004-2018 included
+
+rename  _merge merge2creatingcovariates
 
 save data0702i, replace
-
