@@ -4,7 +4,6 @@
 clear all
 global ess "C:\Users\Hannah\Documents\Thesis\data"
 use "$ess\data0407.dta" // from 4.2 Tasking Mihaylov table
-cd  "C:\Users\Hannah\Documents\Thesis\tables"
 set scheme plotplain
 
 * Destringing
@@ -15,37 +14,55 @@ destring nri, replace
 destring rc, replace
 destring rm, replace
 
+********************************
+* Distribution of main indicators
+*********************************
+* EDUCATION
+*****************
+* sample distri
+graph bar heduc , over(cntry, sort(heduc) ) // sample tertiary mean is unequal to actual pop mean 
 
-* Distribution of higher educ 
-{
-	
-graph bar heduc, over(cntry, sort(heduc) descending) 
-graph bar share_heduc, over(country , sort(heduc) descending) // check whether matching of covariates was successful 
+** population distri
+graph bar share_heduc, over(country , sort(share_heduc) ) /// check whether matching of covariates was successful 
+	title("Share of people with tertiary education") 
 
+*****************
+* RTI
+****************
+graph bar rti, over(country , sort(rti) ) /// 
+	title("Mean RTI") 
 
-tabout heduc citizenship sex mo_heduc country using table1.tex, replace ///
-style(tex)   ///
+graph bar rti, over(cntry, sort(rti)) by(year) 
 
- 
-tab heduc, summarize(sex age mo_iscedhigheduc nacer2 )
-tabstat heduc rti, by(country) stat(mean sd)
-
-* Distribution of RTI 
-destring rti, replace
-
-graph bar rti, over(cntry) by(year) 
-tabstat  rti, by(heduc) statistics(n mean sd min p25 med p75 max) columns(stat) 
-** Boxplot
 graph box rti, by(heduc)
 
-* Kdensity 
-** General 
+hist rti, title("Histogram of rti")
+hist rti, by(country)title("Histogram of rti")
+
+egen N_rti1 = count(rti) if rti ==-1, by(country)
+graph bar N_rti1, ///
+	over(country, sort(N_rti1)) ///
+	title("Number of non-routinisable jobs")
+
+twoway hist rti if rti ==-1, over(country)
+
+* RTI over years average
+set scheme s2color
+  twoway ///
+  kdensity rti if year == 2012, legend(label(1 "2012")) || ///
+  kdensity rti if year == 2014, legend(label(2 "2014"))  || ///
+  kdensity rti if year == 2016, legend(label(3 "2016"))  || ///
+  kdensity rti if year == 2018, legend(label(4 "2018")) 
+  save rtioveryears.jpg
+
+************************
+** RTI and Heduc combined 
+************************
 twoway ///
   (kdensity rti if heduc == 0, mcolor(blue) legend(label(1 "no higher education"))) ///
   (kdensity rti if heduc == 1, mcolor(red) legend(label(2 "higher education")) ///
   xtitle("RTI") ytitle("Kdensity RTI") ///
   title(Distribution of RTI depending on education level))
-  
   
 * splitted into years
 ** 2012 
@@ -83,15 +100,7 @@ twoway ///
   xtitle("RTI") ytitle("Kdensity RTI") ///
   title(2018)  ///
   name(rti2018, replace))
-  
-cd "C:\Users\Hannah\Documents\Thesis\graphs" 
-  twoway ///
-  kdensity rti if year == 2012, legend(label(1 "2012")) || ///
-  kdensity rti if year == 2014, legend(label(2 "2014"))  || ///
-  kdensity rti if year == 2016, legend(label(3 "2016"))  || ///
-  kdensity rti if year == 2018, legend(label(4 "2018")) 
-  save rtioveryears.pdf
-
+* combined graphs
 grc1leg rti2012 rti2014 rti2016 rti2018 , row(2) title(Distribtution of RTI across education level over years) 
 
 
@@ -105,6 +114,8 @@ corr rti heduc
  
 * Occuption composition within industries 
 graph bar rti, over(nacer2) by(year)
+graph bar rti, over(industry_bins) by(year)
+// not so much has changed 
   
 ************************
 ** Descriptive table 
@@ -154,14 +165,15 @@ local diff
 // Now use esttab to create the table with the new difference row
 esttab  nonhigh high diff using descri.tex, replace ///
 	cells("mean(fmt(%6.2f))") label ///
-    mtitles("Total" "Non-High" "High" "Difference") ///
+    mtitles("Non-High" "High" "Difference") ///
     title("Comparison of Means") ///
     stats(N ,labels("Observations")) ///
     nonum
+	
+	
 *********************************
-
-*****************************
 ** Industry related
+*****************************
 graph bar, over(industry, label(labsize(tiny))) by(country)
 graph bar, over(industry_bin, label(labsize(tiny))) by(country)
 destring industry_bins, replace 
@@ -177,10 +189,11 @@ note("red: RTI > 0, grey: RTI < -0.5")
 ******************************
 ** Based on reg7 reg7fe where sex and country seem to display largest impact
 ********************************
-twoway kdensity rti if sex == 2, by(country) col("blue")|| kdensity rti if sex == 1, by(country) col("orange")
-
-
 set scheme s2color
+
+* divided by sex (2 female, 1 male)
+twoway kdensity rti if sex == 2, col("blue")|| kdensity rti if sex == 1, col("orange")
+// male higher (1, orange) -1, to rhs more female (2, blue)
 
 twoway (kdensity rti if cntry == "BE") || ///
 (kdensity rti if cntry == "CH") || ///
@@ -206,6 +219,7 @@ title("RTI's distribution across countries")
 ****************
 ** Scatter check 
 *****************
+set scheme cleanplots
 scatter heduc rti
 qnorm rti
 
