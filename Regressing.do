@@ -74,9 +74,10 @@ esttab reg1 reg2 reg3  using 0408reg.tex, replace ///
 ************************
 **** Interaction 
 *************************
-eststo reg5: reghdfe rti heduc##sex age mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country) vce(cluster nacer2 year) resid
+eststo reg5: reghdfe rti heduc#sex age mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country) vce(cluster nacer2 year) resid
+esttab reg5 using interactsex.tex, 
 
-eststo reg6: reghdfe rti heduc#country age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, noabs vce(cluster nacer2 year)
+eststo reg6: reghdfe rti heduc#country age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(year) vce(cluster nacer2 year)
 // not sure about fixed effects here 
 bysort country heduc: count // smallest country#heduc = 808obs
 esttab reg6 using heduc#country.tex, replace ///
@@ -99,7 +100,7 @@ marginsplot, ///
 ***** heduc#nacer2 // way to many industries to be clear
 *************************
 {
- eststo reg2: reg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp // nacers absorbs a lot! almost -0,1
+ eststo reg2: reg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp nacer2 // nacers absorbs a lot! almost -0,1
 
 eststo reg8: reg rti heduc heduc#nacer2 age sex mo_heduc birthplace citizenship mo_samebirthplace hh_netincome dscrgrp
 margins nacer2, dydx(heduc) atmeans noestimcheck post
@@ -159,16 +160,6 @@ marginsplot, ///
 graph combine graph12 graph14 graph16 graph18, ///
 	row(2) title("Effect of higher education across countries") 
 
-******************
-* Trying to extract betas into new var
-gen betas = . 
-levelsof country, local(countrycodes) //18
-foreach countrycode of local countrycodes {
-    replace betas = 
-    local beta_value = r(mean)
-    replace betas = `beta_value' if country == "`countrycode'"
-}
-
 ******************************************
 * regression table finalment 
 ******************************************
@@ -176,11 +167,12 @@ esttab reg6 e2012 e2014 e2016 e2018 using reg2.tex, ///
 	label nonumbers mtitles("All" "2012" "2014" "2016" "2018") ///
     cells(b(star fmt(%9.2f)) se(par fmt(%9.2f)))  ///
 	keep(1.heduc#1.country 1.heduc#2.country 1.heduc#3.country ///
-	1.heduc#4.country 1.heduc#5.country 1.heduc#6.country 1.heduc#7.country ///
-	1.heduc#8.country 1.heduc#9.country 1.heduc#10.country ///
-	1.heduc#11.country 1.heduc#12.country 1.heduc#13.country ///
-	1.heduc#14.country 1.heduc#15.country 1.heduc#16.country ///
-	1.heduc#17.country 1.heduc#18.country age mo_heduc birthplace hh_netincome share_heduc RDpcppp ) ///
+	1.heduc#4.country 1.heduc#5.country 1.heduc#6.country ///
+	1.heduc#7.country  1.heduc#8.country 1.heduc#9.country ///
+	1.heduc#10.country 1.heduc#11.country 1.heduc#12.country ///
+	1.heduc#13.country 1.heduc#14.country 1.heduc#15.country ///
+	1.heduc#16.country 1.heduc#17.country 1.heduc#18.country ///
+	age mo_heduc birthplace hh_netincome share_heduc RDpcppp ) ///
     title("Regression displaying coefficients for each country") replace 
 	
 
