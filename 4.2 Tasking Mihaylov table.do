@@ -29,7 +29,12 @@ tab isco08 if _merge==1 // over 100 unmatched:  Process control technicians not 
 * twoway kdensity isco08 if _merge == 1 || kdensity isco08 if _merge==3
 // almost identical but in middle field ~ 5000 different
 
-* cannot 
+
 
 drop if _merge==1
+
+
+
+
+
 save "$ess\data0407.dta", replace

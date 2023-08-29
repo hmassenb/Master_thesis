@@ -42,25 +42,6 @@ replace rti09 = 1 if rti <= -0.8
 //  43.63% are treated now 
 
 ******************************
-* interaction of all country##heduc
-{
-global betasofcountries ///
-	2.country#1.heduc 3.country#1.heduc 4.country#1.heduc ///
-	5.country#1.heduc 6.country#1.heduc 7.country#1.heduc ///
-	8.country#1.heduc 9.country#1.heduc 10.country#1.heduc ///
-	11.country#1.heduc 12.country#1.heduc 13.country#1.heduc ///
-	14.country#1.heduc 15.country#1.heduc 16.country#1.heduc ///
-	17.country#1.heduc 18.country#1.heduc
-	
-	*keep(1.heduc#2.country 1.heduc#3.country 1.heduc#4.country ///
-	*1.heduc#5.country 1.heduc#6.country 1.heduc#7.country ///
-	*1.heduc#8.country 1.heduc#9.country 1.heduc#10.country ///
-	*1.heduc#11.country 1.heduc#12.country 1.heduc#13.country ///
-	*1.heduc#14.country 1.heduc#15.country 1.heduc#16.country ///
-	*1.heduc#17.country 1.heduc#18.country 1.heduc#1b.country) /// 
-	*title(Coefficients) ///
-	*levels(90) xtitle("Coefficients") legend(size(vsmall)) 
-}
 
 
 ************************
@@ -73,6 +54,7 @@ matrix list e(V)
 estat vce, correlation 
 
 * Heterosk robust std errors
+** Single cluster
 eststo cluster_nacer1: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, noabs vce(cluster industry_bins) // still signi on the 1% level, effect slightly larger
 
 eststo cluster_nacer2: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, noabs vce(cluster nacer2)
@@ -81,20 +63,27 @@ eststo cluster_year: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome 
 
 eststo cluster_country: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, noabs vce(cluster country)
 
+
+** Multiple cluster
 eststo cluster_country: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, noabs vce(cluster country_bin) // more permissive clustering (coarser groups) result in still on 1% signi result and magnitude slightly increases also with industry clusters
 
 eststo reg4: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, noabs vce(cluster country year)
 
+** ALL cluster
 eststo reg4: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, noabs vce(cluster country_bin year industry_bins) // 10% signi
 
 eststo reg4: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, noabs vce(cluster country year industry_bins) // 10% signi
 
 eststo reg4: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, noabs vce(cluster country year nacer2)
 
+*****************
+** Fixed effects as well
 * 1 + 2 + fixed effects
-eststo reg3: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country year) vce(cluster nacer2 year country) resid
-
-
+eststo reg3: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country) vce(cluster nacer2 year country) resid
+eststo reg3: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(year) vce(cluster nacer2 year country) resid
+eststo reg3: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(industry_bins) vce(cluster industry_bins year country) resid
+eststo reg3: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country year) vce(cluster industry_bins year country) resid
+eststo reg3: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country year industry_bins) vce(cluster industry_bins year country) resid
 
 
 * predict resid3, residuals
@@ -116,9 +105,11 @@ esttab reg1 reg2 reg3  using 0408reg.tex, replace ///
 ************************
 **** Interaction 
 *************************
-eststo reg5: reghdfe rti heduc#sex age mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country) vce(cluster nacer2 year) resid
+* SEX 
+eststo reg5: reghdfe rti heduc#sex age mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country year) vce(cluster nacer2 year) resid
 esttab reg5 using interactsex.tex, 
 
+* COUNTRY
 eststo reg6: reghdfe rti heduc#country age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(year) vce(cluster nacer2 year)
 // not sure about fixed effects here 
 bysort country heduc: count // smallest country#heduc = 808obs
@@ -136,6 +127,22 @@ margins country, dydx(heduc) atmeans noestimcheck post // non signi countries: L
 marginsplot, ///
 	yline(0) ///
 	title("Marginsplot of heduc#country")
+	
+* AGE
+eststo age: reghdfe rti heduc#age_groups sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country year) vce(cluster nacer2 year) resid
+
+
+* HH INCOME
+eststo income: reghdfe rti heduc#hh_netincome sex age mo_heduc birthplace  share_heduc RDpcppp, abs(country year) vce(cluster nacer2 year) resid
+
+
+
+* DISCRI 
+eststo discri: reghdfe rti heduc#dscrgrp hh_netincome sex age mo_heduc birthplace  share_heduc RDpcppp, abs(country year) vce(cluster nacer2 year) resid
+
+
+* MIGRATION 
+eststo migra: reghdfe rti heduc#citizenship hh_netincome sex age mo_heduc birthplace  share_heduc RDpcppp, abs(country year) vce(cluster nacer2 year) resid
 
 
 *************************
@@ -156,51 +163,6 @@ marginsplot
 eststo reg7: reghdfe rti heduc#industry_bins age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country) vce(cluster nacer2 year) 
 }
 
-***********************
-** By year estimation
-***********************
-* 2012
-eststo e2012:  reghdfe rti heduc#country age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp if year==2012, noabs vce(cluster nacer2)
-margins country, dydx(heduc) atmeans noestimcheck post 
-marginsplot, ///
-	yline(0) ///
-	title(" 2012") ///
-	 name(graph12, replace) ///
-	 yline(0) xlabel(, labsize(small))
-
-* 2014
-eststo e2014:  reghdfe rti heduc#country age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp if year==2014, noabs vce(cluster nacer2)
-margins country, dydx(heduc) atmeans noestimcheck post 
-marginsplot, ///
-	yline(0) ///
-	title(" 2014") ///
-	 name(graph14, replace) ///
-	 yline(0) xlabel(, labsize(small))
-
-
-* 2016
-eststo e2016:  reghdfe rti heduc#country age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp if year==2016, noabs vce(cluster nacer2)
-margins country, dydx(heduc) atmeans noestimcheck post 
-marginsplot, ///
-	yline(0) ///
-	title(" 2016") ///
-	 name(graph16, replace) ///
-	 yline(0) xlabel(, labsize(small))
-
-
-* 2018
-eststo e2018:  reghdfe rti heduc#country age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp if year==2018, noabs vce(cluster nacer2)
-margins country, dydx(heduc) atmeans noestimcheck post 
-marginsplot, ///
-	yline(0) ///
-	title(" 2018") ///
-	 name(graph18, replace) ///
-	 yline(0) xlabel(, labsize(small))
-	 
-	 
-* Marginsplot (marginal )
-graph combine graph12 graph14 graph16 graph18, ///
-	row(2) title("Effect of higher education across countries") 
 
 ******************************************
 * regression table finalment 
@@ -248,6 +210,26 @@ twoway scatter se year
     
 }
 
+
+* interaction of all country##heduc
+{
+global betasofcountries ///
+	2.country#1.heduc 3.country#1.heduc 4.country#1.heduc ///
+	5.country#1.heduc 6.country#1.heduc 7.country#1.heduc ///
+	8.country#1.heduc 9.country#1.heduc 10.country#1.heduc ///
+	11.country#1.heduc 12.country#1.heduc 13.country#1.heduc ///
+	14.country#1.heduc 15.country#1.heduc 16.country#1.heduc ///
+	17.country#1.heduc 18.country#1.heduc
+	
+	*keep(1.heduc#2.country 1.heduc#3.country 1.heduc#4.country ///
+	*1.heduc#5.country 1.heduc#6.country 1.heduc#7.country ///
+	*1.heduc#8.country 1.heduc#9.country 1.heduc#10.country ///
+	*1.heduc#11.country 1.heduc#12.country 1.heduc#13.country ///
+	*1.heduc#14.country 1.heduc#15.country 1.heduc#16.country ///
+	*1.heduc#17.country 1.heduc#18.country 1.heduc#1b.country) /// 
+	*title(Coefficients) ///
+	*levels(90) xtitle("Coefficients") legend(size(vsmall)) 
+}
 
 
 

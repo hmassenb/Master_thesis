@@ -2,9 +2,17 @@
 ** 2. Regressions **
 *********************
 * Binary dependent var 
-logit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp
-dydx rti heduc 
-margins
+logit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, robust
+* average marginal effect
+margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post 
+marginsplot // heduc only one with strongest negative impact
+eststo rti
+
+probit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp
+* average marginal effect
+margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post 
+marginsplot // heduc only one with strongest negative impact
+eststo rti
 
 
 * quantil regression 
