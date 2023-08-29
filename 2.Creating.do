@@ -58,28 +58,47 @@ replace age_groups = 3 if age > 50 // 31%
 gen industry = nacer2
 ** numbers have no meaning!
 gen industry_bins = .
-replace industry_bins = 1 if industry <= 3 // "Agriculture, forestry, fishing"
-replace industry_bins = 2  if industry > 3 & industry <= 39 // "Manufacturing, mining and quarrying and other industry"
-replace industry_bins = 3  if industry  > 39 & industry <= 43  // "Construction"
-replace industry_bins = 4  if industry  > 43 & industry <= 56 // "Wholesale and retail trade, transportation and storage, accomodation and food service activities"
-replace industry_bins = 5  if industry  > 56 & industry <= 63 // "Information and communication"
-replace industry_bins = 6  if industry  > 63 & industry <= 66 // "Financial and insurance activities"
-replace industry_bins = 7  if industry  > 66 & industry <= 68 // "Real estate activities "
-replace industry_bins = 8  if industry  > 68 & industry <= 82 // "Professional, scientific, technical, administration and support service activities"
-replace industry_bins = 9  if industry  > 82 & industry <= 88 // "Public administration, defence, education, human health and social work activities "
-replace industry_bins = 10 if industry > 88 & industry <= 93  //  "Arts and entertainment "
-replace industry_bins = 11  if industry > 93 // "Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use, Activities of extra-territorial organisations and bodies"
+replace industry_bins = 1 if industry <= 3 // A "Agriculture, forestry, fishing"
+replace industry_bins = 2  if industry > 3 & industry <= 39 // BCDE "Manufacturing, mining and quarrying and other industry"
+replace industry_bins = 3  if industry  > 39 & industry <= 43  // F "Construction"
+replace industry_bins = 4  if industry  > 43 & industry <= 56 // GHI "Wholesale and retail trade, transportation and storage, accomodation and food service activities"
+replace industry_bins = 5  if industry  > 56 & industry <= 63 // J "Information and communication"
+replace industry_bins = 6  if industry  > 63 & industry <= 66 // K "Financial and insurance activities"
+replace industry_bins = 7  if industry  > 66 & industry <= 68 // L "Real estate activities "
+replace industry_bins = 8  if industry  > 68 & industry <= 82 // MN "Professional, scientific, technical, administration and support service activities"
+replace industry_bins = 9  if industry > 82 & industry <= 88 // POQ "Public administration, defence, education, human health and social work activities "
+replace industry_bins = 10 if industry > 88 & industry <= 93  //  RSTU "Arts and entertainment, Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use, Activities of extra-territorial organisations and bodies"
 
+************************
+** Country bins 
+**********************
+gen country_bin = .
+* south europe
+replace country_bin = 1 if cntry == "ES" | cntry == "PT"
 
-** Creating change of RTI (2012-2018)
-// within country, within occu? 
-* egen
+* west europe 
+replace country_bin = 2 if cntry == "BE" | cntry == "DE" | cntry == "FR" | cntry == "NL"
 
+* north europe 
+replace country_bin = 3 if cntry == "FI" | cntry == "DE" | cntry == "SE" | cntry == "NO" | cntry == "IE"
+
+* east europe
+replace country_bin = 4 if cntry == "SI" | cntry == "PL" | cntry == "LT" | cntry == "HU" | cntry == "EE" | cntry == "CZ"
+
+* non EU
+replace country_bin = 5 if cntry == "CH"
+
+label define Regions 1 "South" 2 "West" 3 "North" 4 "East" 5 "Swiss"
+label  values  country_bin Regions
 save data0702ii.dta, replace
 
-*******************
-** STILL ISSUE WITH MATCHING 
+
+
+
+
+******************* 
 ** Adding share of heduc, investment 
+**********************
 * Preparing covariates data into dta 
 clear all
 import excel "C:\Users\Hannah\Documents\Thesis\data\additional covariates.xlsx", firstrow clear
