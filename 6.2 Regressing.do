@@ -1,6 +1,50 @@
 *********************
 ** 2. Regressions **
 *********************
+clear all
+global ess "C:\Users\Hannah\Documents\Thesis\data"
+use "$ess\data0407.dta" // from 4.2 Tasking mihaylov table
+cd "C:\Users\Hannah\Documents\Thesis"
+set scheme s1mono
+
+******************************
+* destring variables
+drop if _merge==1
+destring rti, replace
+destring nra, replace
+destring nrm, replace
+destring nri, replace
+destring rc, replace
+destring rm, replace
+destring RDpcppp, replace
+destring shareRD, replace
+
+
+************************
+** RTI Bin 
+******************
+* Binary 
+***********
+gen binary_rti = 0 
+replace binary_rti = 1 if rti == -1 
+// 38% are -1
+
+************************
+* Binary but minus vs posi
+******************
+gen plusminus_rti = 0 
+replace plusminus_rti = 1 if rti < 0
+// 76% are in the negative range 
+
+****************************
+* in the middle 
+gen rti09 = 0 
+replace rti09 = 1 if rti <= -0.8
+//  43.63% are treated now 
+
+******************************
+
+
 * Binary dependent var 
 logit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, robust
 * average marginal effect
