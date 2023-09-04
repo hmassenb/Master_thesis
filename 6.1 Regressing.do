@@ -21,9 +21,9 @@ destring shareRD, replace
 
 
 ************************
-**** All cov reg 
+**** Base Model 
 *************************
-* Only OLS
+*  OLS
 eststo ols: reg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp
 
 matrix list e(V)
@@ -41,7 +41,6 @@ eststo cluster_countrybin: reghdfe rti heduc age sex mo_heduc birthplace hh_neti
 
 
 ** Multiple cluster
-
 eststo cluster_countryyear: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, noabs vce(cluster country year)
 
 ** ALL cluster
@@ -59,7 +58,7 @@ esttab ols cluster_nacer1 cluster_year cluster_country cluster_countrybin cluste
 ********************************
 
 *****************
-** Fixed effects as well
+** Fixed Effects 
 *****************
 eststo fecountry: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country) vce(cluster industry_bins year country) resid
 
@@ -98,24 +97,6 @@ esttab ols cluster_3onebin fecountry feyear fecountryyear  using inkrementalreg.
 ************************
 **** Interaction 
 *************************
-* SEX 
-eststo sex: reghdfe rti heduc#sex age mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country year) vce(cluster industry_bins country year)  nocons
-
-esttab sex using interactsex.tex, replace
-gen sexinter = 0 
-replace sexinter = 0.13 if heduc==0 & sex==2 
-replace sexinter = -0.203 if heduc== 1 & sex==1 
-replace sexinter = -0.0985 if heduc == 1 & sex == 2
-graph bar, over(sexinter)
-*********************************
-** Stopped here byreperesnting differences across sex
-
-margins sex, dydx(heduc) atmeans noestimcheck post 
-marginsplot, ///
-	yline(0) ///
-	title("Marginsplot of heduc#sex")
-	
-
 * COUNTRY
 eststo inter_country: reghdfe rti heduc#country age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(year) vce(cluster industry_bins country year) 
 
@@ -132,43 +113,89 @@ esttab inter_country using heduc#country.tex, replace ///
 	title(Coefficients) ///
 	b(4) se(4)
 	
-margins country, dydx(heduc) atmeans noestimcheck post // non signi countries: LT, IE, HU, ES 
-marginsplot, ///
-	yline(0) ///
-	title("Marginsplot of heduc#country")
-	
+* margins country, dydx(heduc) atmeans noestimcheck post // non signi countries: LT, IE, HU, ES 
+* marginsplot, ///
+*	yline(0) ///
+*	title("Marginsplot of heduc#country")
+
+graph box rti, over(country) over(heduc)
+
+*************
+* Coefplot file https://repec.sowi.unibe.ch/stata/coefplot/getting-started.html
+eststo inter_country: reghdfe rti country#heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(year) vce(cluster industry_bins country year) 
+
+coefplot inter_country, ///
+drop(_cons age sex mo_heduc hh_netincome citizenship share_heduc birthplace RDpcppp) ///
+ yline(0) title("Regression results for each country") vertical sort ///
+coeflab(,truncate(2)) xlabel(, angle())  
+
+********************************************
 * COUNTRY BIN 
 eststo inter_countrybin: reghdfe rti heduc#country_bin age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(year) vce(cluster industry_bins country year) 
 
 esttab inter_countrybin using heduc#countrybin.tex, replace ///
 	nogaps label  /// 
-	keep(1.heduc#1.country_bin 1.heduc#2.country_bin 1.heduc#3.country_bin 1.heduc#4.country_bin ///
-	1.heduc#5.country_bin age mo_heduc birthplace hh_netincome share_heduc RDpcppp ) ///
+	keep(1.heduc#1.country_bin 1.heduc#2.country_bin 1.heduc#3.country_bin 1.heduc#4.country_bin 1.heduc#5.country_bin  ///
+	age mo_heduc birthplace hh_netincome share_heduc RDpcppp ) ///
 	title(Coefficients) ///
 	b(4) se(4)
 	
 margins country_bin, dydx(heduc)  noestimcheck post 
 marginsplot, ///
 	yline(0) ///
-	title("Marginsplot of heduc#country_bin")
-
+	title("Marginsplot of heduc#country_bin") // not sure if marginsplot makes sense here? I think boxplot maybe reflect better as marginsplot might work better after an actual binary model 
 	
+graph box rti, over(heduc) over(country_bin) 
+
+
+
+**************************************************************************** SEX  
+eststo sex: reghdfe rti heduc#sex age mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country year) vce(cluster industry_bins country year)  
+margins sex, dydx(heduc) atmeans noestimcheck post 
+marginsplot, ///
+	yline(0) ///
+	title("Marginsplot of heduc#sex")
+graph box rti, over(sex) over(heduc)
+
+
 
 * AGE
-eststo age: reghdfe rti heduc#age_groups sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country year) vce(cluster nacer2 year) resid
-
+eststo age: reghdfe rti heduc#age_groups sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country year) vce(cluster industry_bins year) 
+margins age_groups, dydx(heduc)  noestimcheck post 
+marginsplot, ///
+	yline(0) ///
+	title("Marginsplot of heduc#age")
+graph box rti, over(age_groups) over(heduc) title("Age Heterogeneity")
 
 * HH INCOME
-eststo income: reghdfe rti heduc#hh_netincome sex age mo_heduc birthplace  share_heduc RDpcppp, abs(country year) vce(cluster nacer2 year) resid
-
-
+eststo income: reghdfe rti heduc#hh_netincome sex age mo_heduc birthplace  share_heduc RDpcppp, abs(country year) vce(cluster industry_bins year) 
+margins hh_netincome, dydx(heduc)  noestimcheck post 
+marginsplot, ///
+	yline(0)   nolab ///
+	title("Marginsplot of heduc#income")
+	
+graph box rti, over(hh_netincome) over(heduc) ///
+title("Income Heterogeneity") nolab 
 
 * DISCRI 
-eststo discri: reghdfe rti heduc#dscrgrp hh_netincome sex age mo_heduc birthplace  share_heduc RDpcppp, abs(country year) vce(cluster nacer2 year) resid
-
+eststo discri: reghdfe rti heduc#dscrgrp hh_netincome sex age mo_heduc birthplace  share_heduc RDpcppp, abs(country year) vce(cluster industry_bins year) 
+margins dscrgrp, dydx(heduc)  noestimcheck post 
+marginsplot, ///
+	yline(0)   nolab ///
+	title("Marginsplot of heduc#discri")
+	
+graph box rti, over(dscrgrp) over(heduc) title("Discrimination Heterogeneity")
 
 * MIGRATION 
-eststo migra: reghdfe rti heduc#citizenship hh_netincome sex age mo_heduc birthplace  share_heduc RDpcppp, abs(country year) vce(cluster nacer2 year) resid
+eststo migra: reghdfe rti heduc#citizenship hh_netincome sex age mo_heduc birthplace  share_heduc RDpcppp, abs(country year) vce(cluster industry_bins year) 
+margins citizenship, dydx(heduc)  noestimcheck post 
+marginsplot, ///
+	yline(0)   nolab ///
+	title("Marginsplot of heduc#citizen")
+	
+graph box rti, over(citizenship) over(heduc)
+
+twoway kdensity rti if citizenship == 1, col(cranberry) || kdensity rti if citizenship == 2
 
 
 *************************

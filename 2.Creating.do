@@ -77,23 +77,24 @@ gen country_bin = .
 replace country_bin = 1 if cntry == "ES" | cntry == "PT"
 
 * west europe 
-replace country_bin = 2 if cntry == "BE" | cntry == "DE" | cntry == "FR" | cntry == "NL"
+replace country_bin = 2 if cntry == "BE" | cntry == "DE" | cntry == "FR" | cntry == "NL" | cntry == "CH"
 
 * north europe 
-replace country_bin = 3 if cntry == "FI" | cntry == "DE" | cntry == "SE" | cntry == "NO" | cntry == "IE"
+replace country_bin = 3 if cntry == "FI" | cntry == "SE" | cntry == "NO" 
+
 
 * east europe
-replace country_bin = 4 if cntry == "SI" | cntry == "PL" | cntry == "LT" | cntry == "HU" | cntry == "EE" | cntry == "CZ"
+replace country_bin = 4 if cntry == "SI" | cntry == "HU" | cntry == "CZ" | cntry == "LT" | cntry == "EE" | cntry == "PL" 
 
+
+* Islands
+replace country_bin = 5  if cntry == "GB" | cntry == "IE"
 * non EU
-replace country_bin = 5 if cntry == "CH"
+* replace country_bin = 5 if cntry == "CH"
 
-label define Regions 1 "South" 2 "West" 3 "North" 4 "East" 5 "Swiss"
+label define Regions 1 "South" 2 "West" 3 "North" 4 "East"  5 "Islands"
 label  values  country_bin Regions
 save data0702ii.dta, replace
-
-
-
 
 
 ******************* 

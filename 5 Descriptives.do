@@ -244,6 +244,10 @@ ttest rc, by(heduc)
 corr rti heduc // -0,1816
 corr rti educ_year // -0,1586
 
+**********************************
+*** Country bin graph
+graph box rti, over(country_bin) title("Differences in RTI between country cluster") 
+
 
 
 
