@@ -19,6 +19,11 @@ destring rm, replace
 destring RDpcppp, replace
 destring shareRD, replace
 
+* Why necessary 
+eststo fecountryyear: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country year) vce(cluster industry_bins year country) resid
+predict resid_basemodel, residuals
+qnorm resid_basemodel, title("distribution of residuals") 
+
 
 ************************
 ** RTI Bin 
@@ -49,14 +54,39 @@ replace rti09 = 1 if rti <= -0.8
 logit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, robust
 * average marginal effect
 margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post 
-marginsplot // heduc only one with strongest negative impact
+marginsplot // heduc strongest positive impact s.t. outcome variable is 1 
 eststo rti
+
+* Logit with fe
+*******************
+xtset country
+xtlogit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp i.country i.year 
+
+* beta reg [0,1]
+*******************
+gen rti2 = rti/2 +0.5
+betareg rti2 heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp 
+
+* meqrlogit  https://www.stata.com/manuals14/memeqrlogit.pdf https://rips-irsp.com/articles/10.5334/irsp.90
+*******************
 
 probit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp
 * average marginal effect
 margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post 
 marginsplot // heduc only one with strongest negative impact
 eststo rti
+
+* Binary but minus vs posi 
+logit plusminus_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, robust
+* average marginal effect
+margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post 
+marginsplot 
+
+* In the middle 
+logit rti09 heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, robust
+* average marginal effect
+margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post 
+marginsplot 
 
 
 * quantil regression 

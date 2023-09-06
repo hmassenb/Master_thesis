@@ -64,9 +64,9 @@ eststo fecountry: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome sha
 
 eststo feyear: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(year) vce(cluster industry_bins year country) resid
 
-eststo fecountryyear: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country year) vce(cluster industry_bins year country) resid3
+eststo fecountryyear: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country year) vce(cluster industry_bins year country) // resid3
 * predict resid3, residuals
-qnorm resid3, title("distribution of residuals") 
+*qnorm resid3, title("distribution of residuals") 
 
 
 eststo feindustrybins: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(industry_bins) vce(cluster industry_bins year country) resid
@@ -118,6 +118,9 @@ esttab inter_country using heduc#country.tex, replace ///
 *	yline(0) ///
 *	title("Marginsplot of heduc#country")
 
+
+
+
 graph box rti, over(country) over(heduc)
 
 *************
@@ -148,8 +151,11 @@ marginsplot, ///
 graph box rti, over(heduc) over(country_bin) 
 
 
-
-**************************************************************************** SEX  
+* HETEROGENEITIES
+*********************************
+* MATCHING STILL!!!!
+*************************************
+***** SEX  
 eststo sex: reghdfe rti heduc#sex age mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country year) vce(cluster industry_bins country year)  
 margins sex, dydx(heduc) atmeans noestimcheck post 
 marginsplot, ///
@@ -241,7 +247,7 @@ esttab reg6 e2012 e2014 e2016 e2018 using reg2.tex, ///
 
 
 ***********************************************
-** Sigma Convergence 
+** Sigma Convergence (2018-2012)/2012
 ************************
 {
 gen se=.
