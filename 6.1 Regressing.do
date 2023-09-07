@@ -64,8 +64,9 @@ eststo fecountry: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome sha
 
 eststo feyear: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(year) vce(cluster industry_bins year country) resid
 
-eststo fecountryyear: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country year) vce(cluster industry_bins year country) // resid3
-* predict resid3, residuals
+eststo fecountryyear: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country year) vce(cluster industry_bins year country) resid
+predict resid3, residuals
+corr(resid3 heduc) // corr 0,0
 *qnorm resid3, title("distribution of residuals") 
 
 
@@ -245,29 +246,6 @@ esttab reg6 e2012 e2014 e2016 e2018 using reg2.tex, ///
 
 
 
-
-***********************************************
-** Sigma Convergence (2018-2012)/2012
-************************
-{
-gen se=.
-eststo sigma2012: reghdfe rti heduc age sex mo_heduc if year == 2012, absorb(country) vce(cluster nacer2 country) 
-replace se = _se[heduc] if year == 2012
-
-eststo sigma2014: reghdfe rti heduc age sex mo_heduc if year == 2014, absorb(country) vce(cluster nacer2 country) 
-replace se = _se[heduc] if year == 2014
-
-eststo sigma2016: reghdfe rti heduc age sex mo_heduc if year == 2016, absorb(country) vce(cluster nacer2 country) 
-replace se = _se[heduc] if year == 2016
-
-eststo sigma2018: reghdfe rti heduc age sex mo_heduc if year == 2018, absorb(country) vce(cluster nacer2 country) 
-replace se = _se[heduc] if year == 2018
-tab se
-
-twoway scatter se year
-
-    
-}
 
 
 * interaction of all country##heduc

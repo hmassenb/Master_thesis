@@ -37,6 +37,7 @@ replace binary_rti = 1 if rti == -1
 ************************
 * Binary but minus vs posi
 ******************
+/*
 gen plusminus_rti = 0 
 replace plusminus_rti = 1 if rti < 0
 // 76% are in the negative range 
@@ -48,33 +49,44 @@ replace rti09 = 1 if rti <= -0.8
 //  43.63% are treated now 
 
 ******************************
-
+*/
 
 * Binary dependent var 
-logit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, robust
+logit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp i.country i.year, vce(cluster year)
 * average marginal effect
 margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post 
-marginsplot // heduc strongest positive impact s.t. outcome variable is 1 
-eststo rti
+margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post atmeans
+marginsplot, title("Marginal effects of coefficients with Logit model") yline(0) // heduc strongest positive impact s.t. outcome variable is 1 
+esttab logit
 
-* Logit with fe
-*******************
-xtset country
-xtlogit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp i.country i.year 
 
-* beta reg [0,1]
-*******************
-gen rti2 = rti/2 +0.5
-betareg rti2 heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp 
+/*
+gen rti_poisson = rti + 1.01
+gen log_rtitransi = log(rti_poisson)
+* OLS GLM
+glm rti_poisson heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp i.year i.country, link()
+
+glm rti_poisson heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp 
+// damn effect is twice as large now 
+// shifted values from -1,1 to 0,2 to get rid of neg value and enable poisson distribution would my var kinda look like
+glm rti_poisson heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp i.year i.country, link(logit) cluster(country) rob
+
 
 * meqrlogit  https://www.stata.com/manuals14/memeqrlogit.pdf https://rips-irsp.com/articles/10.5334/irsp.90
+// mixed effect model contains RE and FE -> not sure about that
 *******************
+meqrlogit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp || country: || year:
+margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post 
+marginsplot // heduc only one with strongest negative impact
 
+
+
+* probit 
 probit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp
 * average marginal effect
 margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post 
 marginsplot // heduc only one with strongest negative impact
-eststo rti
+
 
 * Binary but minus vs posi 
 logit plusminus_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, robust
@@ -88,26 +100,15 @@ logit rti09 heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, 
 margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post 
 marginsplot 
 
+*/ 
 
 * quantil regression 
 *********************
 ssc install grqreg, replace 
-grqreg, cons ci ols olsci list seed(10101) reps(400) scale (1.1) // cool graph but have to adopt it still to my context
 
-quietly bsqreg ltotexp suppins totchr age female  white, quantile (.50) reps(400)  
-
-sqreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, q(.25 .50 .75)
-
-centile ltotexp, centile(5 50 95)
-
-centile ltotexp, centile(10(10)90)
-
-qplot ltotexp, recast(line) scale (1.5)
-
-qreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp
-
-qreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, quantile(.9)
-
+xi: qreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp i.country i.year, vce(robust)
+grqreg heduc,  ci 
+grqreg heduc, quantiles(0.25 0.50 0.75)
 
 
 ** Inkremental building of quantile table 
@@ -123,14 +124,28 @@ estimates store QR_50
 quietly qreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, quantile (.75)
 estimates store QR_75
 
-set seed 10101
 quietly bsqreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, quant(.50) reps(400)
 estimates store BSQR_50
 
 estimates table OLS QR_25 QR_50 QR_75 
 
+* MATCHING 
+*******************
+
+teffects nnmatch (rti heduc age mo_heduc birthplace hh_netincome)  (sex), caliper(.5) osample(unmatched)
 
 
-quietly regress ltotexp suppins totchr age female white 
-estat hettest suppins totchr age female white, iid
+
+
+
+
+
+
+
+
+
+
+
+
+
 

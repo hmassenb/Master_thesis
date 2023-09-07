@@ -21,7 +21,9 @@ destring shareRD, replace
 
 ************************
 
-* SIGMA CONVERGENCE
+* SIGMA CONVERGENCE 
+// nice formula for sigma : 
+// https://www.tandfonline.com/doi/pdf/10.1080/1331677X.2022.2142814
 ************************
 
 egen mean_RTI = mean(rti), by(year country)
