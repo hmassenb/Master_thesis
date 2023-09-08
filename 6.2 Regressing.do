@@ -54,10 +54,10 @@ replace rti09 = 1 if rti <= -0.8
 * Binary dependent var 
 logit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp i.country i.year, vce(cluster year)
 * average marginal effect
-margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post 
-margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post atmeans
+eststo m1: margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post 
+eststo m2: margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post atmeans
 marginsplot, title("Marginal effects of coefficients with Logit model") yline(0) // heduc strongest positive impact s.t. outcome variable is 1 
-esttab logit
+esttab m1 m2 using binarymodel.tex 
 
 
 /*
@@ -111,6 +111,7 @@ grqreg heduc,  ci
 grqreg heduc, quantiles(0.25 0.50 0.75)
 
 
+/*
 ** Inkremental building of quantile table 
 quietly regress rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp
 estimates store OLS 
@@ -128,22 +129,56 @@ quietly bsqreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RD
 estimates store BSQR_50
 
 estimates table OLS QR_25 QR_50 QR_75 
+*/
 
 * MATCHING 
 *******************
-
-teffects nnmatch (rti heduc age mo_heduc birthplace hh_netincome)  (sex), caliper(.5) osample(unmatched)
-
-
-
+* Nearest neighbour 
+drop unmatched
+teffects nnmatch (rti heduc country year) (sex), caliper(.05) osample(unmatched) nn(1)
 
 
-
-
+tebalance summarize (rti) (sex heduc age mo_heduc  hh_netincome country year)
+tebalance box sex
 
 
 
+* propensity score 
+* sex
+teffects psmatch (rti) (sex heduc age mo_heduc hh_netincome country year, logit ) // 0,112719 difference women are worse off
+teoverlap 
+tebalance box 
 
+* mothers education
+teffects psmatch (rti) (mo_heduc heduc age sex hh_netincome country year, logit ) //  -.051417 difference, having mother with heduc decrease rti 
+teoverlap 
+tebalance box 
+
+
+
+
+
+// Perform propensity score matching using teffects
+teffects psmatch (RTI) ///
+  (mo_heduc heduc age sex hh_netincome country year, logit), ///
+  method(knn) caliper(0.05) common
+
+// Check balance with standardized differences
+teffects psmatch (RTI) ///
+  (mo_heduc heduc age sex hh_netincome country year, logit), ///
+  method(knn) caliper(0.05) common check
+
+// Display summary statistics of covariates before and after matching
+summarize mo_heduc heduc age sex hh_netincome country year ///
+  if teffects_common == 1, detail
+summarize mo_heduc heduc age sex hh_netincome country year ///
+  if teffects_common == 0, detail
+
+
+tebalance density sex
+tebalance density rti 
+
+tebalance box sex, treatment(matched_var) common
 
 
 
