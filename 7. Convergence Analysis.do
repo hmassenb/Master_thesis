@@ -25,7 +25,6 @@ destring shareRD, replace
 // nice formula for sigma : 
 // https://www.tandfonline.com/doi/pdf/10.1080/1331677X.2022.2142814
 ************************
-
 egen mean_RTI = mean(rti), by(year country)
 egen sd_RTI = sd(rti), by(year country)
 
@@ -52,7 +51,7 @@ gen avgrti2012 = avgrti if year == 2012
 egen avgrti2012_country = mean(avgrti2012), by(country)
 replace avgrti2012 = avgrti2012_country
 
-gen growth = (avgrti2018 - avgrti2012) / 6
+gen growth = (avgrti2018 - avgrti2012) / 6 // thats growth rate
 
 
 reg growth avgrti2012

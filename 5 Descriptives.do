@@ -29,6 +29,11 @@ graph bar share_heduc, over(country , sort(share_heduc) ) /// check whether matc
 *****************
 * RTI
 ****************
+
+graph bar (count), over(rti, relab(-1 "-1" 0 "0" 1 "1")) 
+
+
+
 graph bar rti, over(country , sort(rti) ) /// 
 	title("Mean RTI") 
 
@@ -248,9 +253,4 @@ corr rti educ_year // -0,1586
 *** Country bin graph
 graph box rti, over(country_bin) title("Differences in RTI between country cluster") 
 
-
-
-
-
-legend(order(1 "BE" 2 "CH))
 

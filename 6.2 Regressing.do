@@ -135,6 +135,18 @@ estimates table OLS QR_25 QR_50 QR_75
 *******************
 * Nearest neighbour 
 drop unmatched
+
+eststo before: tabstat rti heduc mo_heduc age_groups birthplace country year , by(sex)
+eststo after: 
+esttab before 
+
+psmatch2 rti  , mahalanobis(sex) outcome(heduc mo_heduc age_groups birthplace country year) llr bwidth(2) caliper(0.5)  ate
+
+
+
+
+teffects psmatch (rti) (sex heduc mo_heduc age_groups birthplace country year) // .1137957 
+
 teffects nnmatch (rti heduc country year) (sex), caliper(.05) osample(unmatched) nn(1)
 
 
@@ -149,12 +161,16 @@ teffects psmatch (rti) (sex heduc age mo_heduc hh_netincome country year, logit 
 teoverlap 
 tebalance box 
 
-* mothers education
-teffects psmatch (rti) (mo_heduc heduc age sex hh_netincome country year, logit ) //  -.051417 difference, having mother with heduc decrease rti 
-teoverlap 
-tebalance box 
 
-
+* hh netincome
+eststo income_inter: reghdfe rti heduc#hh_netincome mo_heduc age birthplace sex RDpcppp share_heduc, absorb(country year) vce(cluster industry_bins year country) nocons
+coefplot income_inter, ///
+	drop(_cons age sex mo_heduc share_heduc birthplace RDpcppp share_heduc) ///
+	yline(0) title("Interaction between household income and education") ///
+	vertical ///
+	xlab(1 "1" 2 "2" 3 "3" 4 "4" 5 "5" 6 "6" 7 "7" 8 "8" 9 "9" 10 "10") ///
+	xtitle("Decentile of household income") ///
+	ytitle("RTI")
 
 
 
