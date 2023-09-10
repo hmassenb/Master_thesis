@@ -205,6 +205,10 @@ graph box rti, over(citizenship) over(heduc)
 twoway kdensity rti if citizenship == 1, col(cranberry) || kdensity rti if citizenship == 2
 
 
+* Mulit level estimation 
+mixed rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp || country: || year:
+
+
 *************************
 ***** heduc#nacer2 // way to many industries to be clear
 *************************
@@ -222,52 +226,6 @@ marginsplot
 * solut: created bins
 eststo reg7: reghdfe rti heduc#industry_bins age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(country) vce(cluster nacer2 year) 
 }
-
-
-******************************************
-* regression table finalment 
-******************************************
-esttab reg6 e2012 e2014 e2016 e2018 using reg2.tex, ///
-	label nonumbers mtitles("All" "2012" "2014" "2016" "2018") ///
-    cells(b(star fmt(%9.2f)) se(par fmt(%9.2f)))  ///
-	keep(1.heduc#1.country 1.heduc#2.country 1.heduc#3.country ///
-	1.heduc#4.country 1.heduc#5.country 1.heduc#6.country ///
-	1.heduc#7.country  1.heduc#8.country 1.heduc#9.country ///
-	1.heduc#10.country 1.heduc#11.country 1.heduc#12.country ///
-	1.heduc#13.country 1.heduc#14.country 1.heduc#15.country ///
-	1.heduc#16.country 1.heduc#17.country 1.heduc#18.country ///
-	age mo_heduc birthplace hh_netincome share_heduc RDpcppp ) ///
-    title("Regression displaying coefficients for each country") replace 
-	
-
-
-
-
-
-
-
-
-
-* interaction of all country##heduc
-{
-global betasofcountries ///
-	2.country#1.heduc 3.country#1.heduc 4.country#1.heduc ///
-	5.country#1.heduc 6.country#1.heduc 7.country#1.heduc ///
-	8.country#1.heduc 9.country#1.heduc 10.country#1.heduc ///
-	11.country#1.heduc 12.country#1.heduc 13.country#1.heduc ///
-	14.country#1.heduc 15.country#1.heduc 16.country#1.heduc ///
-	17.country#1.heduc 18.country#1.heduc
-	
-	*keep(1.heduc#2.country 1.heduc#3.country 1.heduc#4.country ///
-	*1.heduc#5.country 1.heduc#6.country 1.heduc#7.country ///
-	*1.heduc#8.country 1.heduc#9.country 1.heduc#10.country ///
-	*1.heduc#11.country 1.heduc#12.country 1.heduc#13.country ///
-	*1.heduc#14.country 1.heduc#15.country 1.heduc#16.country ///
-	*1.heduc#17.country 1.heduc#18.country 1.heduc#1b.country) /// 
-	*title(Coefficients) ///
-	*levels(90) xtitle("Coefficients") legend(size(vsmall)) 
-}
-
 
 
 
