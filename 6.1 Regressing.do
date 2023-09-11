@@ -69,6 +69,12 @@ predict resid3, residuals
 corr(resid3 heduc) // corr 0,0
 *qnorm resid3, title("distribution of residuals") 
 
+/* Testing distribution between yhat and resid without robust errors
+reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, noabsorb resid
+predict resid_test, residuals
+predict yhat2,
+twoway scatter  resid_test yhat2
+*/
 
 eststo feindustrybins: reghdfe rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(industry_bins) vce(cluster industry_bins year country) resid
 
@@ -135,6 +141,8 @@ coeflab(,truncate(2)) xlabel(, angle())
 
 ********************************************
 * COUNTRY BIN 
+* label define Regions 1 "South" 2 "West" 3 "North" 4 "East"  5 "Islands"
+
 eststo inter_countrybin: reghdfe rti heduc#country_bin age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(year) vce(cluster industry_bins country year) 
 
 esttab inter_countrybin using heduc#countrybin.tex, replace ///
@@ -144,11 +152,17 @@ esttab inter_countrybin using heduc#countrybin.tex, replace ///
 	title(Coefficients) ///
 	b(4) se(4)
 	
-margins country_bin, dydx(heduc)  noestimcheck post 
-marginsplot, ///
-	yline(0) ///
-	title("Marginsplot of heduc#country_bin") // not sure if marginsplot makes sense here? I think boxplot maybe reflect better as marginsplot might work better after an actual binary model 
-	
+coefplot inter_countrybin, ///
+drop( age sex mo_heduc hh_netincome citizenship share_heduc birthplace RDpcppp) ///
+yline(0) title("Regression results for pooled countries") vertical sort ///
+xlabel(1 "North"  2 "South" 3 "West" 4 "Islands" 5 "East" ) ///
+coeflab(,truncate(2)) xlabel(, angle())  ///
+keep(1.heduc#1.country_bin 1.heduc#2.country_bin 1.heduc#3.country_bin 1.heduc#4.country_bin 1.heduc#5.country_bin) /// //explicitly adding all interaction terms
+baselevels /// // define baselevels sucht that all interacted are displayed
+format(%9.2f) mlabgap(*2)  mlabposition(3) mlab
+
+
+
 graph box rti, over(heduc) over(country_bin) 
 
 
