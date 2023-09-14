@@ -53,10 +53,13 @@ replace rti09 = 1 if rti <= -0.8
 
 * Binary dependent var 
 logit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp i.country i.year, vce(cluster year)
-* average marginal effect
-eststo m1: margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post 
-eststo m2: margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post atmeans
+
+eststo m1: margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post  // heduc coeff  .1428394
+marginsplot 
+
+eststo m2: margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post atmeans // heduc coeff .1487569 
 marginsplot, title("Marginal effects of coefficients with Logit model") yline(0) // heduc strongest positive impact s.t. outcome variable is 1 
+
 esttab m1 m2 using binarymodel.tex 
 
 
@@ -110,6 +113,8 @@ xi: qreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp 
 grqreg heduc,  ci 
 grqreg heduc, quantiles(0.25 0.50 0.75)
 
+qplot rti 
+
 
 /*
 ** Inkremental building of quantile table 
@@ -140,18 +145,44 @@ eststo before: tabstat rti heduc mo_heduc age_groups birthplace country year , b
 eststo after: 
 esttab before 
 
-psmatch2 rti  , mahalanobis(sex) outcome(heduc mo_heduc age_groups birthplace country year) llr bwidth(2) caliper(0.5)  ate
-
-
+* way to long
+* psmatch2 rti , mahalanobis(sex) outcome(heduc mo_heduc age_groups birthplace country year) llr bwidth(2) caliper(0.5)  ate
 
 
 teffects psmatch (rti) (sex heduc mo_heduc age_groups birthplace country year) // .1137957 
+ graph bar  rti,  over(sex)  over(heduc) blabel(bar) title("Differences of RTI across education level and sex") b1title("Education Level") ytitle("Mean of RTI")
+ di -0.422123 + 0.297194 // -.124929
+ di -0.654591 + 0.543279 // -.111312
+ 
+ * RA 
+eststo fem:  reghdfe rti heduc  age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp  if sex == 2 , abs(country year) vce(cluster industry_bins country year)
+eststo masc:  reghdfe rti heduc  age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp  if sex == 1 , abs(country year) vce(cluster industry_bins country year)
+
+eststo fem_indu:  reghdfe rti heduc  age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp industry_bins if sex == 2 , abs(country year) vce(cluster industry_bins country year)
+eststo masc_indu: reghdfe rti heduc  age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp industry_bins if sex == 1 , abs(country year) vce(cluster industry_bins country year)
+// .0111037 women have a 0,0111 higher importance of heduc 
+* table RA
+esttab fem masc fem_indu masc_indu using ra_hetero_sex.tex, replace ///
+drop(sex) b(4) se(4)
+
+egen mean_rti = mean(rti), by(sex industry_bins)
+
+twoway scatter mean_rti industry_bins if sex == 1 & heduc == 1, col(darkblue)|| scatter mean_rti industry_bins if sex == 2 & heduc == 1, col(cranberry) connect
+
+twoway bar mean_rti industry_bins if sex == 1 & heduc == 1, bcol(blue)|| bar mean_rti industry_bins if sex == 2 & heduc == 1, bcol(cranberry) title("Difference in RTI within Industry") legend(order(1 "Men" 2 "Female"))
+
+onewayplot mean_rti if sex==2, by(industry_bins) ytitle("") stack ms(oh) msize(tiny) width(20)
+twoway bar mean_rti industry_bins if sex == 1, col(blue%1) || bar mean_rti industry_bins if sex ==2, col(cranberry%40) 
+
+
 
 teffects nnmatch (rti heduc country year) (sex), caliper(.05) osample(unmatched) nn(1)
 
-
 tebalance summarize (rti) (sex heduc age mo_heduc  hh_netincome country year)
 tebalance box sex
+
+_pctile rti, percentiles(50)
+graph box rti, over(sex) over(heduc) 
 
 
 
@@ -163,14 +194,31 @@ tebalance box
 
 
 * hh netincome
+gen inc_bin = 1 if hh_netincome > 5
+replace inc_bin = 0 if hh_netincome <= 5
+teffects psmatch (rti) (inc_bin heduc age mo_heduc sex country year, logit ) //  -.043182  difference women are worse off
+
 eststo income_inter: reghdfe rti heduc#hh_netincome mo_heduc age birthplace sex RDpcppp share_heduc, absorb(country year) vce(cluster industry_bins year country) nocons
 coefplot income_inter, ///
 	drop(_cons age sex mo_heduc share_heduc birthplace RDpcppp share_heduc) ///
 	yline(0) title("Interaction between household income and education") ///
 	vertical ///
 	xlab(1 "1" 2 "2" 3 "3" 4 "4" 5 "5" 6 "6" 7 "7" 8 "8" 9 "9" 10 "10") ///
-	xtitle("Decentile of household income") ///
-	ytitle("RTI")
+	xtitle("Decentile of household income") ytitle("RTI") ///
+	keep(1.heduc#1.hh_netincome 1.heduc#2.hh_netincome 1.heduc#3.hh_netincome 1.heduc#4.hh_netincome 1.heduc#5.hh_netincome ///
+	1.heduc#6.hh_netincome 1.heduc#7.hh_netincome 1.heduc#8.hh_netincome 1.heduc#9.hh_netincome 1.heduc#10.hh_netincome) ///
+	baselevels
+	
+graph bar rti, over(hh_netincome, label(angle(45)))  by(heduc, title("RTI for men and women across income decentiles")) ///
+bar(1, fcolor(green)) bar(2, fcolor(orange)) ascategory asyvars ytitle("Mean of RTI") legend(row(1))
+
+
+egen mean_rti = mean(rti) , by(hh_netincome heduc)
+
+twoway scatter mean_rti hh_netincome if heduc == 0, col(green) ///
+|| scatter mean_rti hh_netincome if heduc == 1, col(orange) ///
+title("Difference in RTI across income and education") ///
+legend(order(1 "No tertiary education" 2 "With tertiary education"))
 
 
 

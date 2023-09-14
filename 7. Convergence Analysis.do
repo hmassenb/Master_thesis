@@ -33,15 +33,68 @@ egen overall_sd_rti = sd(sd_RTI), by(year)
 
 * Calculate the sigma ratio
 gen sigma_ratio = overall_sd_rti / overall_mean_rti
-replace sigma_ratio = sigma_ratio 
-
 twoway scatter sigma_ratio year, title("Sigma convergence") 
 
+* Something different as beta doesnt workout 
+gen sigma_ratio2 = sd_RTI / mean_RTI
+twoway scatter sigma_ratio2 year, title("Sigma convergence") mlab(country)
+// Czechia is huge outlier, is this driving distortion between sigma and beta? 
 
 * BETA CONVERGENCE
 ************************
 * RTI 
+egen avgrti = mean(rti), by(country year)
+gen avgrti2018 = avgrti if year == 2018
+egen avgrti2018_country = mean(avgrti2018), by(country)
+replace avgrti2018 = avgrti2018_country
+
+gen avgrti2012 = avgrti if year == 2012
+egen avgrti2012_country = mean(avgrti2012), by(country)
+replace avgrti2012 = avgrti2012_country
+
+gen growth = (avgrti2018 - avgrti2012) / 6  // it doesnt matter for uncondi whether growth rate or avg growth 
+
 ** Unconditional
+************************
+reg growth avgrti2012
+//  coef -.0009616 , corr 0,00
+predict uncondi_resid, residuals 
+predict fitted
+
+twoway scatter uncondi_resid avgrti2012, ///
+mlabel(country) msymbol(smcircle) legend(off) ///
+xlab(#10) ylab(#10) ytitle("Growth  of RTI") xtit("RTI 2012") ///
+|| lfit uncondi_resid avgrti2012, title("Unconditional Beta Convergence")
+
+* residuals, y and y hat result in the same graph! 
+twoway scatter growth avgrti2012, ///
+mlabel(country) msymbol(smcircle) legend(off) ///
+xlab(#10) ylab(#10) ytitle("Growth  of RTI") xtit("RTI 2012") ///
+|| lfit growth avgrti2012 , title("Unconditional Beta Convergence")
+
+twoway scatter fitted avgrti2012, ///
+mlabel(country) msymbol(smcircle) ///
+xlab(#10) ylab(#10) ytitle("Growth  of RTI") xtit("RTI 2012") ///
+|| lfit fitted avgrti2012 , title("Unconditional Beta Convergence")
+*/
+
+** Conditional
+********************
+clear all
+global ess "C:\Users\Hannah\Documents\Thesis\data"
+use "$ess\data0407.dta" // from 4.2 Tasking mihaylov table
+cd "C:\Users\Hannah\Documents\Thesis\tables"
+set scheme s1mono
+drop if _merge==1
+destring rti, replace
+destring nra, replace
+destring nrm, replace
+destring nri, replace
+destring rc, replace
+destring rm, replace
+destring RDpcppp, replace
+destring shareRD, replace
+
 egen avgrti = mean(rti), by(country year)
 gen avgrti2018 = avgrti if year == 2018
 egen avgrti2018_country = mean(avgrti2018), by(country)
@@ -53,16 +106,23 @@ replace avgrti2012 = avgrti2012_country
 
 gen growth = (avgrti2018 - avgrti2012) / 6 // thats growth rate
 
+reghdfe growth avgrti2012 shareRD share_heduc i.industry_bins i.country i.year  , noabs vce(cluster country year industry_bins) resid
+// ceof .2027119 , corr  0.0868
+predict condi_resid, residuals 
+egen resid = mean(condi_resid), by(country) // to reduce four obs to only one obs per country
 
-reg growth avgrti2012
-twoway scatter growth avgrti2012, mlabel(country) msymbol(smcircle) xlab(#10) ylab(#10) || lfit growth avgrti2012 , title("Unconditional Beta-Convergence")
 
-** Conditional
-reg growth avgrti2012 shareRD share_heduc
-predict condi_resid, residuals
-sum condi_resid
+twoway scatter resid avgrti2012, ///
+mlabel(country) msymbol(smcircle) legend(off) ///
+xlab(#10) ylab(#5) ytitle("Growth of RTI") xtitle("RTI 2012") /// 
+|| lfit resid avgrti2012 , title("Conditional Beta Convergence") 
 
-twoway scatter condi_resid avgrti2012, mlabel(country) msymbol(smcircle) xlab(#10) ylab(#10) || lfit condi_resid avgrti2012 , title("Conditional Beta-Convergence") 
+
+
+scatter resid mpg, ylabel(0(5000)15000, labels labsize(vsmall) angle(horizontal))
+corr resid avgrti2012
+
+
 
 
 * Log version 
@@ -247,4 +307,53 @@ twoway scatter growth_betas betas12 , mlabel(country) msymbol(smcircle) xlab(#10
 gen diff2 = betas18 - betas12 
 reg diff2 betas12
 twoway scatter diff2 betas12 , mlabel(country) msymbol(smcircle) xlab(#10) ylab(#10) || lfit diff2 betas12, title("Unconditional Beta-convergence of Coefficient")
+
+}
+
+*******************
+clear all
+global ess "C:\Users\Hannah\Documents\Thesis\data"
+use "$ess\data0407.dta" // from 4.2 Tasking mihaylov table
+cd "C:\Users\Hannah\Documents\Thesis\tables"
+set scheme s1mono
+drop if _merge==1
+destring rti, replace
+destring nra, replace
+destring nrm, replace
+destring nri, replace
+destring rc, replace
+destring rm, replace
+destring RDpcppp, replace
+destring shareRD, replace
+
+replace rti = rti +1 
+egen avgrti = mean(rti), by(country year)
+gen avgrti2018 = avgrti if year == 2018
+egen avgrti2018_country = mean(avgrti2018), by(country)
+replace avgrti2018 = avgrti2018_country
+
+gen avgrti2012 = avgrti if year == 2012
+egen avgrti2012_country = mean(avgrti2012), by(country)
+replace avgrti2012 = avgrti2012_country
+
+gen growth = (avgrti2018 - avgrti2012) / avgrti2012 / 6 // thats growth rate
+
+reghdfe growth avgrti2012 shareRD share_heduc i.industry_bins i.country i.year  , noabs vce(cluster country year industry_bins) resid
+// ceof .2027119 , corr  0.0868
+predict condi_resid, residuals 
+egen resid = mean(condi_resid), by(country) // to reduce four obs to only one obs per country
+
+
+twoway scatter resid avgrti2012, ///
+mlabel(country) msymbol(smcircle) legend(off) ///
+xlab(#10) ylab(#5) ytitle("Growth of RTI") xtitle("RTI 2012") /// 
+|| qfit resid avgrti2012 , title("Conditional Beta Convergence") 
+
+reg growth avgrti2012
+predict residi, residuals 
+
+twoway scatter residi avgrti2012, ///
+mlabel(country) msymbol(smcircle) legend(off) ///
+xlab(#10) ylab(#5) ytitle("Growth of RTI") xtitle("RTI 2012") /// 
+|| lfit residi avgrti2012 , title("Conditional Beta Convergence") 
 

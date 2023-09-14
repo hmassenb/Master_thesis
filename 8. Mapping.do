@@ -104,9 +104,25 @@ replace betas = bSI if cntry == "SI"
 
 drop bBE-bSI
 
-* Creating Map
+* Creating Map of betas 
 collapse (mean) betas _ID, by(cntry)
+
+format(betas) %12.2f // change values displayed in the legend 
 
 spmap betas using "C:\Users\Hannah\Documents\Thesis\data\Map\second try\CNTR_RG_10M_2020_3035.shp\another_shp.dta" , ///
 id(_ID) fcolor(RdYlGn) ///
-legend(pos(2) row(5)  forcesize ) 
+legend(pos(12) row(5) forcesize size(*0.75) ) 
+
+
+* Creating map of share_heduc 
+collapse (mean) share_heduc _ID, by(cntry)
+
+format(share_heduc) %12.2f
+
+spmap share_heduc using "C:\Users\Hannah\Documents\Thesis\data\Map\second try\CNTR_RG_10M_2020_3035.shp\another_shp.dta" , ///
+id(_ID) fcolor(RdYlGn)  ///
+legend(position(3) bplacement(neast) rowgap(1.5) ring(0)) ///
+clm(b)
+
+
+

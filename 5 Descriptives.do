@@ -189,7 +189,28 @@ twoway kdensity nacer2 if rti > 0, col("red")|| kdensity nacer2 if rti < -0.5 //
 , title("Distribution of industry dependent on rti value") ///
 note("red: RTI > 0, grey: RTI < -0.5")
 
+* Showing distribution of men and women across industry bins
+// Replace those two lines by simply adding ,freq
+*egen women_share_indu = count(sex) if sex==2, by(industry_bin) 
+*egen men_share_indu = count(sex) if sex==1, by(industry_bin)
+ 
+ 
+* Heterogeneity check
+twoway hist industry_bin , freq by(sex) title("In which industries work men and women?")
+twoway kdensity industry_bin if sex == 1, col(orange) || kdensity industry_bin if sex ==2, lpattern(solid) col(green) title("In which industries work men and women?") legend(pos(6) row(1) order(1 "Men" 2 "Women")) 
 
+twoway kdensity rti if sex == 1 || kdensity rti if sex == 2, legend(order(1 "Men" 2 "Women"))
+
+
+graph bar rti, over(sex, label(angle(45))) over(industry_bin) ///
+bar(1, fcolor(green)) bar(2, fcolor(orange)) ascategory asyvars ///
+title("RTI for men and women across industries")
+
+graph bar rti, over(sex, label(angle(45))) over(industry_bin) by(heduc, title("RTI for men and women across industries")) ///
+bar(1, fcolor(green)) bar(2, fcolor(orange)) ascategory asyvars ytitle("Mean of RTI") legend(row(1))
+
+estpost tab industry_bin sex
+esttab u, cells("b") unstack noobs
 
 ******************************
 ** Based on reg7 reg7fe where sex and country seem to display largest impact
