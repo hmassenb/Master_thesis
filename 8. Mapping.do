@@ -42,7 +42,7 @@ merge m:1 cntry using "C:\Users\Hannah\Documents\Thesis\data\Map\second try\CNTR
 * drop if _merge == 2 // those are the countries that I excluded from my sample 
 drop _merge
 
-
+save readytomap.dta , replace 
 
 * Obtaining betas
 eststo inter_country_beta: reghdfe rti heduc#country age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp , abs(year) vce(cluster year industry_bins country) 
@@ -113,8 +113,12 @@ spmap betas using "C:\Users\Hannah\Documents\Thesis\data\Map\second try\CNTR_RG_
 id(_ID) fcolor(RdYlGn) ///
 legend(pos(12) row(5) forcesize size(*0.75) ) 
 
-
+**********************************
 * Creating map of share_heduc 
+**********************************
+clear all
+use readytomap
+
 collapse (mean) share_heduc _ID, by(cntry)
 
 format(share_heduc) %12.2f
@@ -123,6 +127,29 @@ spmap share_heduc using "C:\Users\Hannah\Documents\Thesis\data\Map\second try\CN
 id(_ID) fcolor(RdYlGn)  ///
 legend(position(3) bplacement(neast) rowgap(1.5) ring(0)) ///
 clm(b)
+
+**********************************
+* Creating map of country bins 
+**********************************
+clear all 
+use readytomap
+
+* label define Regions 1 "South" 2 "West" 3 "North" 4 "East"  5 "Islands"
+gen coeff_bin = . 
+replace coeff_bin = -.2085462 if country_bin == 1
+replace coeff_bin = -.22607  if country_bin == 2
+replace coeff_bin =  -.2560904  if country_bin == 3
+replace coeff_bin = -.1353804  if country_bin == 4
+replace coeff_bin = -.1827005  if country_bin == 5
+
+collapse (mean) coeff_bin _ID, by(cntry) 
+// collapse by(cntry) is crucial to get whole europe
+format(coeff_bin) %12.2f
+
+spmap coeff_bin using "C:\Users\Hannah\Documents\Thesis\data\Map\second try\CNTR_RG_10M_2020_3035.shp\another_shp.dta" , ///
+id(_ID) fcolor(RdYlGn)  ///
+cln(5) legend(pos(12) row(5) forcesize size(*0.75) ) 
+
 
 
 

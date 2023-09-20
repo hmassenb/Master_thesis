@@ -139,8 +139,11 @@ drop(_cons age sex mo_heduc hh_netincome citizenship share_heduc birthplace RDpc
  yline(0) title("Regression results for each country") vertical sort ///
 coeflab(,truncate(2)) xlabel(, angle())  
 
-********************************************
+
+
+********************
 * COUNTRY BIN 
+************************
 * label define Regions 1 "South" 2 "West" 3 "North" 4 "East"  5 "Islands"
 
 eststo inter_countrybin: reghdfe rti heduc#country_bin age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(year) vce(cluster industry_bins country year) 
@@ -154,12 +157,13 @@ esttab inter_countrybin using heduc#countrybin.tex, replace ///
 	
 coefplot inter_countrybin, ///
 drop( age sex mo_heduc hh_netincome citizenship share_heduc birthplace RDpcppp) ///
-yline(0) title("Regression results for pooled countries") vertical sort ///
-xlabel(1 "North"  2 "South" 3 "West" 4 "Islands" 5 "East" ) ///
+yline(0) title("Results for pooled countries") vertical sort ///
+xlabel(1 "North"  2 "West" 3 "South" 4 "Islands" 5 "East" ) ///
 coeflab(,truncate(2)) xlabel(, angle())  ///
 keep(1.heduc#1.country_bin 1.heduc#2.country_bin 1.heduc#3.country_bin 1.heduc#4.country_bin 1.heduc#5.country_bin) /// //explicitly adding all interaction terms
 baselevels /// // define baselevels sucht that all interacted are displayed
 format(%9.2f) mlabgap(*2)  mlabposition(3) mlab
+
 
 
 
