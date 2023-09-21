@@ -86,7 +86,6 @@ replace country_bin = 3 if cntry == "FI" | cntry == "SE" | cntry == "NO"
 * east europe
 replace country_bin = 4 if cntry == "SI" | cntry == "HU" | cntry == "CZ" | cntry == "LT" | cntry == "EE" | cntry == "PL" 
 
-
 * Islands
 replace country_bin = 5  if cntry == "GB" | cntry == "IE"
 * non EU

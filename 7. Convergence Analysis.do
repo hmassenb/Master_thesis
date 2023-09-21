@@ -61,10 +61,20 @@ reg growth avgrti2012
 predict uncondi_resid, residuals 
 predict fitted
 
+
+* Singular countries 
 twoway scatter uncondi_resid avgrti2012, ///
-mlabel(country) msymbol(smcircle) legend(off) ///
+ msymbol(smcircle) mlab(country) legend(off) ///
 xlab(#10) ylab(#10) ytitle("Growth  of RTI") xtit("RTI 2012") ///
 || lfit uncondi_resid avgrti2012, title("Unconditional Beta Convergence")
+
+* Country binned version
+separate uncondi_resid, by(country_bin) veryshortlabel
+twoway scatter uncondi_resid? avgrti2012, ///
+ msymbol(smcircle) mcolor(green orange blue red yellow) legend(on) ///
+xlab(#10) ylab(#10) ytitle("Growth  of RTI") xtit("RTI 2012") ///
+|| lfit uncondi_resid avgrti2012, title("Unconditional Beta Convergence")
+
 
 * residuals, y and y hat result in the same graph! 
 twoway scatter growth avgrti2012, ///
@@ -116,6 +126,12 @@ twoway scatter resid avgrti2012, ///
 mlabel(country) msymbol(smcircle) legend(off) ///
 xlab(#10) ylab(#5) ytitle("Growth of RTI") xtitle("RTI 2012") /// 
 || lfit resid avgrti2012 , title("Conditional Beta Convergence") 
+
+separate resid, by(country_bin) veryshortlabel
+twoway scatter resid? avgrti2012, ///
+ msymbol(smcircle) mcolor(green orange blue red yellow) legend(on) ///
+xlab(#10) ylab(#10) ytitle("Growth  of RTI") xtit("RTI 2012") ///
+|| lfit resid avgrti2012, title("Conditional Beta Convergence")
 
 
 

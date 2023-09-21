@@ -178,10 +178,12 @@ teffects psmatch (rti) (sex heduc mo_heduc age_groups birthplace country year) /
  graph bar  rti,  over(sex)  over(heduc) blabel(bar) title("Differences of RTI across education level and sex") b1title("Education Level") ytitle("Mean of RTI")
  di -0.422123 + 0.297194 // -.124929
  di -0.654591 + 0.543279 // -.111312
+tebalance density
  
  * RA 
 eststo fem:  reghdfe rti heduc  age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp  if sex == 2 , abs(country year) vce(cluster industry_bins country year)
 eststo masc:  reghdfe rti heduc  age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp  if sex == 1 , abs(country year) vce(cluster industry_bins country year)
+twoway line fem heduc || line masc heduc
 
 eststo fem_indu:  reghdfe rti heduc  age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp industry_bins if sex == 2 , abs(country year) vce(cluster industry_bins country year)
 eststo masc_indu: reghdfe rti heduc  age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp industry_bins if sex == 1 , abs(country year) vce(cluster industry_bins country year)

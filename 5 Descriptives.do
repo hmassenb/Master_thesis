@@ -70,6 +70,7 @@ twoway ///
   title(Distribution of RTI depending on education level))
   
 * splitted into years
+{
 ** 2012 
 twoway ///
   (kdensity rti if heduc == 0, mcolor(blue) legend(label(1 "no higher education"))) ///
@@ -211,6 +212,8 @@ bar(1, fcolor(green)) bar(2, fcolor(orange)) ascategory asyvars ytitle("Mean of 
 
 estpost tab industry_bin sex
 esttab u, cells("b") unstack noobs
+
+{
 
 ******************************
 ** Based on reg7 reg7fe where sex and country seem to display largest impact

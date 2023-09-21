@@ -152,4 +152,35 @@ cln(5) legend(pos(12) row(5) forcesize size(*0.75) )
 
 
 
+* Account for outliers in country bins
+**********************************
+clear all
+use "C:\Users\Hannah\Documents\Thesis\data\readytomap.dta"
+replace country_bin = 6 if cntry == "CH" 
+replace country_bin = 6 if cntry ==  "NL"
+replace country_bin = 7 if cntry == "PL"
+
+label define Länder 1 "South" 2 "West" 3 "North" 4 "East"  5 "Islands" 6 "Swiss + Netherl" 7 "Poland"
+label  values  country_bin Länder
+
+reghdfe rti heduc#country_bin age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, abs(year) vce(cluster industry_bins year country)
+
+gen coeff_bin = . 
+replace coeff_bin = -.210733  if country_bin == 1
+replace coeff_bin =  -.2081617 if country_bin == 2
+replace coeff_bin = -.2560979  if country_bin == 3
+replace coeff_bin =  -.135942   if country_bin == 4
+replace coeff_bin =  -.1828413  if country_bin == 5
+replace coeff_bin =   -.28732  if country_bin == 6
+replace coeff_bin =  -.3483343  if country_bin == 7
+
+collapse (mean) coeff_bin _ID, by(cntry) 
+// collapse by(cntry) is crucial to get whole europe
+format(coeff_bin) %12.2f
+
+spmap coeff_bin using "C:\Users\Hannah\Documents\Thesis\data\Map\second try\CNTR_RG_10M_2020_3035.shp\another_shp.dta" , ///
+id(_ID) fcolor(RdYlGn)  ///
+cln(4) legend(pos(12) row(5) forcesize size(*0.75) ) 
+
+
 
