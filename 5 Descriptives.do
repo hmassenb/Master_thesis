@@ -123,29 +123,29 @@ graph bar rti, over(nacer2) by(year)
 graph bar rti, over(industry_bins) by(year)
 // not so much has changed 
   
-************************
-** Descriptive table 
-**************************
+************************************
+** Descriptive table Chapter Data **
+************************************
 cd  "C:\Users\Hannah\Documents\Thesis\tables"
-summarize age sex nacer2 mo_heduc rti nra nri nrm rc rm  
+summarize age sex mo_heduc birthplace hh_netincome  rti nra nri nrm rc rm  
 estpost summarize age sex nacer2 mo_heduc rti nra nri rc rm nrm 
 eststo total
 
 
-summarize  age sex nacer2 mo_heduc rti nra nri nrm rc rm if heduc == 0
-estpost summarize age sex nacer2 mo_heduc rti nra nri rc rm nrm if heduc == 0
+summarize age sex mo_heduc birthplace hh_netincome  rti nra nri nrm rc rm if heduc == 0
+estpost summarize age sex mo_heduc birthplace hh_netincome  rti nra nri nrm rc rm if heduc == 0
 eststo nonhigh
 local nonhigh
 
-summarize  age sex nacer2 mo_heduc rti nra nri nrm rc rm if heduc == 1
-estpost summarize age sex nacer2 mo_heduc rti nra nri nrm rc rm  if heduc == 1
+summarize age sex mo_heduc birthplace hh_netincome  rti nra nri nrm rc rm if heduc == 1
+estpost summarize age sex mo_heduc birthplace hh_netincome  rti nra nri nrm rc rm rm  if heduc == 1
 eststo high 
 local high
 
 
 // Calculate the difference between high and non-high means
 global cov ///
-age sex nacer2 mo_heduc rti nra nri nrm rc rm
+age sex mo_heduc birthplace hh_netincome  rti nra nri nrm rc rm
 
 foreach var in $cov{
 	egen mean_`var'_1 = mean(`var') if heduc == 1
@@ -161,7 +161,7 @@ foreach var in $cov{
 }
 
 global diffmeancov ///
-diff_mean_age diff_mean_sex diff_mean_nacer2 diff_mean_mo_heduc diff_mean_rti diff_mean_nra diff_mean_nri diff_mean_nrm diff_mean_rc diff_mean_rm
+diff_mean_age diff_mean_sex diff_mean_mo_heduc diff_mean_birthplace diff_mean_hh_netincome diff_mean_rti diff_mean_nra diff_mean_nri diff_mean_nrm diff_mean_rc diff_mean_rm
 
 summarize  $diffmeancov
 estpost summarize $diffmeancov

@@ -5,7 +5,7 @@ clear all
 global ess "C:\Users\Hannah\Documents\Thesis\data"
 use "$ess\data0407.dta" // from 4.2 Tasking mihaylov table
 cd "C:\Users\Hannah\Documents\Thesis"
-set scheme s1mono
+set scheme cleanplots
 
 ******************************
 * destring variables
@@ -162,19 +162,56 @@ estimates table OLS QR_25 QR_50 QR_75
 
 * MATCHING 
 *******************
-{
 * Nearest neighbour 
 drop unmatched
 
-eststo before: tabstat rti heduc mo_heduc age_groups birthplace country year , by(sex)
-eststo after: 
-esttab before 
+* HETEROGENEITY BY SEX
+sum  heduc mo_heduc age birthplace hh_netincome  rti nra nri nrm rc rm if sex == 2
+estpost sum  heduc mo_heduc age birthplace hh_netincome  rti nra nri nrm rc rm if sex == 2
+eststo female 
+local female
 
-* way to long
-* psmatch2 rti , mahalanobis(sex) outcome(heduc mo_heduc age_groups birthplace country year) llr bwidth(2) caliper(0.5)  ate
+sum  heduc mo_heduc age birthplace hh_netincome  rti nra nri nrm rc rm if sex == 1
+estpost sum  heduc mo_heduc age birthplace hh_netincome  rti nra nri nrm rc rm if sex == 1
+eststo male 
+local male
 
+global cov ///
+heduc mo_heduc age birthplace hh_netincome  rti nra nri nrm rc rm 
 
-teffects psmatch (rti) (sex heduc mo_heduc age_groups birthplace country year) // .1137957 
+foreach var in $cov{
+	egen mean_`var'_1 = mean(`var') if sex == 2
+	egen mean_`var'_0 = mean(`var') if sex == 1
+	replace mean_`var'_1= mean_`var'_1[_n-1] if mean_`var'_1==.
+	replace mean_`var'_1= mean_`var'_1[_n+1] if mean_`var'_1==.
+	replace mean_`var'_0= mean_`var'_0[_n-1] if mean_`var'_0==.
+	replace mean_`var'_0= mean_`var'_0[_n+1] if mean_`var'_0==.
+}
+
+foreach var in $cov{
+		gen diff_mean_`var' = mean_`var'_1 - mean_`var'_0
+}
+
+global diffmeancov ///
+diff_mean_heduc diff_mean_age diff_mean_mo_heduc diff_mean_birthplace diff_mean_hh_netincome diff_mean_rti diff_mean_nra diff_mean_nri diff_mean_nrm diff_mean_rc diff_mean_rm
+
+summarize  $diffmeancov
+estpost summarize $diffmeancov
+eststo diff
+local diff
+
+esttab female male diff using heterogen_sex.tex, replace ///
+	cells("mean(fmt(%9.4f))") ///
+	collab("Female" "Male" "Difference") ///
+    title("Descriptive Statistics by Sex") 
+
+* MATCHING SEX	
+teffects psmatch (rti) (sex heduc mo_heduc age_groups birthplace country year) ///
+ , gen(nn) // .1137957 
+predict ps*, ps // * enable saving for each level of sex (women vs men)
+predict te ,te // super cool store te for each i
+twoway kdensity te if sex == 1 || kdensity te if sex == 2 // difference in treatment effect WOW
+
  graph bar  rti,  over(sex)  over(heduc) blabel(bar) title("Differences of RTI across education level and sex") b1title("Education Level") ytitle("Mean of RTI")
  di -0.422123 + 0.297194 // -.124929
  di -0.654591 + 0.543279 // -.111312

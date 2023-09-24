@@ -148,7 +148,7 @@ format(coeff_bin) %12.2f
 
 spmap coeff_bin using "C:\Users\Hannah\Documents\Thesis\data\Map\second try\CNTR_RG_10M_2020_3035.shp\another_shp.dta" , ///
 id(_ID) fcolor(RdYlGn)  ///
-cln(5) legend(pos(12) row(5) forcesize size(*0.75) ) 
+clm(custom) clb(-0.35 -0.28 -0.22  -0.17 -0.11) legend(pos(12) row(5) forcesize size(*0.75) ) 
 
 
 
@@ -180,7 +180,7 @@ format(coeff_bin) %12.2f
 
 spmap coeff_bin using "C:\Users\Hannah\Documents\Thesis\data\Map\second try\CNTR_RG_10M_2020_3035.shp\another_shp.dta" , ///
 id(_ID) fcolor(RdYlGn)  ///
-cln(4) legend(pos(12) row(5) forcesize size(*0.75) ) 
+clmethod(custom) clb(-0.35 -0.28 -0.22  -0.17 -0.11) legend(pos(12) row(5) forcesize size(*0.75) ) 
 
 
 
