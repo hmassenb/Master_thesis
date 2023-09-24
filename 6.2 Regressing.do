@@ -200,23 +200,108 @@ estpost summarize $diffmeancov
 eststo diff
 local diff
 
+* Table of sex 
 esttab female male diff using heterogen_sex.tex, replace ///
 	cells("mean(fmt(%9.4f))") ///
 	collab("Female" "Male" "Difference") ///
     title("Descriptive Statistics by Sex") 
+	
+eststo heterosex: reghdfe rti heduc#sex age mo_heduc birthplace 		
+	hh_netincome shareRD share_heduc, ///
+	absorb(country year) vce(cluster country year industry_bins)
+	
+esttab heterosex using heterosex.tex, ///
+	b(4) se(4)
+	
+coefplot heterosex, ///
+	keep(1.heduc#1.sex 1.heduc#2.sex 0.heduc#1.sex 0.heduc#2.sex) ///
+	baselevels vertical yline(0) mlab mlabcolor(black) ///
+	xlab(1 "Men no Heduc" 2 "Women no Heduc" 3 "Men Heduc" 4 "Women Heduc") ///
+	title("Differences in Sex obtained by Regression")
+
+* Maybe easier to digest 
+twoway kdensity rti if sex == 1 & heduc == 1,  || ///
+        kdensity rti if sex == 2 & heduc == 1, || ///
+        kdensity rti if sex == 1 & heduc == 0, col(orange) || ///
+        kdensity rti if sex == 2 & heduc == 0, col(green)  ///
+        legend(order( 1 "Men heduc" 2 "Women heduc" 3 "Men not heduc" 4 "Women not hedu") ///
+		pos(6) row(1)) ///
+		ytitle("Density RTI") ///
+		title("Differences of RTI across education level and sex")
 
 * MATCHING SEX	
-teffects psmatch (rti) (sex heduc mo_heduc age_groups birthplace country year) ///
- , gen(nn) // .1137957 
-predict ps*, ps // * enable saving for each level of sex (women vs men)
-predict te ,te // super cool store te for each i
-twoway kdensity te if sex == 1 || kdensity te if sex == 2 // difference in treatment effect WOW
+teffects psmatch (rti) (sex heduc mo_heduc age_groups birthplace hh_netincome country year) ///
+ , gen(nn) // .1063726  
 
- graph bar  rti,  over(sex)  over(heduc) blabel(bar) title("Differences of RTI across education level and sex") b1title("Education Level") ytitle("Mean of RTI")
+predict ps*, ps // * enable saving for each level of sex (women vs men)
+predict po*, po 
+predict te ,te // super cool store te for each i
+
+sum te
+tebalance summarize
+tebalance density rti, legend(row(1) pos(6))
+
+* twoway kdensity te if sex == 1 || kdensity te if sex == 2 ///
+* , legend(order( 1 "TE men" 2 "TE women")) // difference in treatment effect 
+
+twoway kdensity ps1 || kdensity ps2
+
+tebalance density
+twoway kdensity po0 || kdensity po1 || ///
+	kdensity rti if sex == 1 || kdensity rti if sex == 2, ///
+	legend(order( 1 "Matched men" 2 "Matched women" 3 "Unmatched men" 4 "Unmatched women"))
+
+graph bar po1 || bar po2
+	
+graph bar rti,  over(sex)  over(heduc) ///
+	blabel(bar) title("Differences of RTI across education level and sex") 	///
+	b1title("Education Level") ytitle("Mean of RTI") asyvars  ///
+	 bar(1, bcolor(orange*0.9)) bar(2, bcolor(green*0.8)) bar(3, bcolor(gold)) bar(4, bcolor(yellow)) ///
+	 legend(pos(6) row(1))
+	  
  di -0.422123 + 0.297194 // -.124929
  di -0.654591 + 0.543279 // -.111312
-tebalance density
- 
+
+{
+* Mean median comparison
+egen median=median(rti), by(heduc sex)
+egen mean = mean(rti), by(heduc sex)
+estpost tabstat mean median
+tab mean heduc if sex == 1
+tab mean heduc if sex == 2
+
+* Boxplot sex heduc rti 
+graph box rti, over(sex) over(heduc) ///
+bar(1, color(green)) bar(2, color(orange)) ascategory asyvars medtype(line,) title("RTI based on sex and education level") legend(pos(6) row(1))
+// median: men(heduc = -1, no heduc = -0,6) women(heduc = -.5432793, no heduc = -0.5)
+// mean: men(heduc =  -.6545912, no heduc = -.422123) women(heduc =-.8181819, no heduc =  -.2971935)
+
+
+* Industry analysis by sex
+egen mean_rti = mean(rti), by(sex industry_bins)
+
+twoway scatter mean_rti industry_bins if sex == 1 & heduc == 1, col(darkblue)|| scatter mean_rti industry_bins if sex == 2 & heduc == 1, col(cranberry) connect
+
+twoway bar mean_rti industry_bins if sex == 1 & heduc == 1, bcol(blue)|| bar mean_rti industry_bins if sex == 2 & heduc == 1, bcol(cranberry) title("Difference in RTI within Industry") legend(order(1 "Men" 2 "Female"))
+
+onewayplot mean_rti if sex==2, by(industry_bins) ytitle("") stack ms(oh) msize(tiny) width(20)
+twoway bar mean_rti industry_bins if sex == 1, col(blue%1) || bar mean_rti industry_bins if sex ==2, col(cranberry%40) 
+}
+
+* propensity score 
+teffects psmatch (rti) (sex heduc age mo_heduc hh_netincome birthplace  country year, logit ) //.1091003  difference women are worse off
+teoverlap 
+tebalance box 
+
+** Nearest neighbor
+teffects nnmatch  (rti heduc age mo_heduc hh_netincome birthplace country year) (sex)  // .1130791  
+teffects nnmatch  (rti heduc age mo_heduc hh_netincome birthplace country year) (sex), caliper(0.2) osample(unmatched)
+teffects nnmatch (rti heduc age mo_heduc hh_netincome birthplace country year) (sex) if !unmatched, caliper(0.2)
+
+
+** regression adjustment
+teffects ra  (rti heduc age mo_heduc hh_netincome birthplace country year) (sex)  //  .1117791
+
  * RA 
 eststo fem:  reghdfe rti heduc  age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp  if sex == 2 , abs(country year) vce(cluster industry_bins country year)
 eststo masc:  reghdfe rti heduc  age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp  if sex == 1 , abs(country year) vce(cluster industry_bins country year)
@@ -230,79 +315,53 @@ esttab fem masc fem_indu masc_indu using ra_hetero_sex.tex, replace ///
 drop(sex) b(4) se(4)
 
 
-* Mean median comparison
-egen median=median(rti), by(heduc sex)
-egen mean = mean(rti), by(heduc sex)
-estpost tabstat mean median
-tab mean heduc if sex == 1
-tab mean heduc if sex == 2
-
-* Boxplot sex heduc rti 
-graph box rti, over(sex) over(heduc) ///
-bar(1, fcolor(green)) bar(2, fcolor(orange)) ascategory asyvars medtype(line,) title("RTI based on sex and education level") 
-// median: men(heduc = -1, no heduc = -0,6) women(heduc = -.5432793, no heduc = -0.5)
-// mean: men(heduc =  -.6545912, no heduc = -.422123) women(heduc =-.8181819, no heduc =  -.2971935)
-
-twoway ///
-(kdensity rti if sex == 1, col(green)) ///
-(kdensity rti if sex == 2, col(orange)) , by(heduc, title("Distribution of RTI")) ///
-title("") ///
-legend(order(1 "Men" 2 "Women"))
-
-* Industry analysis by sex
-egen mean_rti = mean(rti), by(sex industry_bins)
-
-twoway scatter mean_rti industry_bins if sex == 1 & heduc == 1, col(darkblue)|| scatter mean_rti industry_bins if sex == 2 & heduc == 1, col(cranberry) connect
-
-twoway bar mean_rti industry_bins if sex == 1 & heduc == 1, bcol(blue)|| bar mean_rti industry_bins if sex == 2 & heduc == 1, bcol(cranberry) title("Difference in RTI within Industry") legend(order(1 "Men" 2 "Female"))
-
-onewayplot mean_rti if sex==2, by(industry_bins) ytitle("") stack ms(oh) msize(tiny) width(20)
-twoway bar mean_rti industry_bins if sex == 1, col(blue%1) || bar mean_rti industry_bins if sex ==2, col(cranberry%40) 
-
-
-* propensity score 
-* sex
-teffects psmatch (rti) (sex heduc age mo_heduc hh_netincome country year, logit ) // 0,112719 difference women are worse off
-teoverlap 
-tebalance box 
-
-
+ 
 * hh netincome
 ***********************
-gen inc_bin = 1 if hh_netincome > 5
-replace inc_bin = 0 if hh_netincome <= 5
-teffects psmatch (rti) (inc_bin heduc age mo_heduc sex country year, logit ) //  -.043182 loose significance of effect as binning plays divergence down 
 
 eststo income_inter: reghdfe rti heduc#hh_netincome mo_heduc age birthplace sex RDpcppp share_heduc, absorb(country year) vce(cluster industry_bins year country) nocons
+
 esttab income_inter using income_hetero.tex, replace ///
-keep(1.heduc#1.hh_netincome 1.heduc#2.hh_netincome 1.heduc#3.hh_netincome 1.heduc#4.hh_netincome 1.heduc#5.hh_netincome ///
+	keep(1.heduc#1.hh_netincome 1.heduc#2.hh_netincome 1.heduc#3.hh_netincome 1.heduc#4.hh_netincome 	 1.heduc#5.hh_netincome ///
 	1.heduc#6.hh_netincome 1.heduc#7.hh_netincome 1.heduc#8.hh_netincome 1.heduc#9.hh_netincome 1.heduc#10.hh_netincome)
 
-	
+
 coefplot income_inter, ///
 	drop(_cons age sex mo_heduc share_heduc birthplace RDpcppp share_heduc) ///
 	yline(0) title("Interaction between household income and education") ///
-	vertical ///
+	vertical  `colors' ///
 	xlab(1 "1" 2 "2" 3 "3" 4 "4" 5 "5" 6 "6" 7 "7" 8 "8" 9 "9" 10 "10") ///
 	xtitle("Decentile of household income") ytitle("RTI") ///
 	keep(1.heduc#1.hh_netincome 1.heduc#2.hh_netincome 1.heduc#3.hh_netincome 1.heduc#4.hh_netincome 1.heduc#5.hh_netincome ///
 	1.heduc#6.hh_netincome 1.heduc#7.hh_netincome 1.heduc#8.hh_netincome 1.heduc#9.hh_netincome 1.heduc#10.hh_netincome) ///
 	baselevels
 	
-graph bar rti, over(hh_netincome, label(angle(45)))  by(heduc, title("RTI for men and women across income decentiles")) ///
-bar(1, fcolor(green)) bar(2, fcolor(orange)) ascategory asyvars ytitle("Mean of RTI") legend(row(1))
+graph bar rti, over(hh_netincome, label(angle(45))) ///
+by(heduc, title("RTI for men and women across income decentiles")) ///
+bar(1, fcolor(green)) bar(2, fcolor(orange)) ///
+ascategory asyvars ytitle("Mean of RTI") legend(row(1))
 
 
 egen mean_rti = mean(rti) , by(hh_netincome heduc)
 
 * main graph diverging behavior depending on heduc 
-twoway scatter mean_rti hh_netincome if heduc == 0, col(green) ///
-|| scatter mean_rti hh_netincome if heduc == 1, col(orange) ///
-title("Difference in RTI across income and education") ///
-legend(order(1 "No tertiary education" 2 "With tertiary education"))
+twoway scatter mean_rti hh_netincome if heduc == 0, col(green) fcol(green) ///
+|| scatter mean_rti hh_netincome if heduc == 1, col(orange) fcol(orange) ///
+	title("Difference in RTI across income and education") ///
+	legend(order(1 "No tertiary education" 2 "With tertiary education") nobox ///
+	 pos(6) row(1)) ytitle("Mean of RTI")
 
 * how many obs I have per decentile depending on heduc
 hist hh_netincome , freq by(heduc)
+
+forval i=1/10{
+    local colors "`colors' bar(`i', color(green*`=(`i'/7)'))"
+}
+graph bar rti, over(hh_netincome) bar(1, col(green*0.7)) ///
+asyvars `colors' title("RTI over income decentiles") ///
+legend(pos(3) row(10) nobox ///
+order(1 "1st" 2 "2nd" 3 "3rd" 4 "4th" 5 "5th" 6 "6th" 7 "7th" 8 "8th" 9 "9th" 10 "10th" ))
+
 
 * Migration 
 *****************
