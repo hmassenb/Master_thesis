@@ -116,7 +116,7 @@ esttab inter_country using heduc#country.tex, replace ///
 	1.heduc#8.country 1.heduc#9.country 1.heduc#10.country ///
 	1.heduc#11.country 1.heduc#12.country 1.heduc#13.country ///
 	1.heduc#14.country 1.heduc#15.country 1.heduc#16.country ///
-	1.heduc#17.country 1.heduc#18.country age mo_heduc birthplace hh_netincome share_heduc RDpcppp ) ///
+	1.heduc#17.country 1.heduc#18.country age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp ) ///
 	title(Coefficients) ///
 	b(4) se(4)
 	

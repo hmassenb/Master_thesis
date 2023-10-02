@@ -4,7 +4,7 @@
 clear all
 global ess "C:\Users\Hannah\Documents\Thesis\data"
 use "$ess\data0407.dta" // from 4.2 Tasking Mihaylov table
-set scheme plotplain
+set scheme cleanplots
 
 * Destringing
 destring rti, replace
@@ -64,9 +64,9 @@ set scheme s2color
 ** RTI and Heduc combined 
 ************************
 twoway ///
-  (kdensity rti if heduc == 0, mcolor(blue) legend(label(1 "no higher education"))) ///
-  (kdensity rti if heduc == 1, mcolor(red) legend(label(2 "higher education")) ///
-  xtitle("RTI") ytitle("Kdensity RTI") ///
+  (kdensity rti if heduc == 0, mcolor(blue) legend(label(1 "No higher education"))) ///
+  (kdensity rti if heduc == 1, mcolor(red) legend(label(2 "Higher education")) ///
+  xtitle("RTI") ytitle("Kdensity RTI") legend(pos(6) row(1)) ///
   title(Distribution of RTI depending on education level))
   
 * splitted into years

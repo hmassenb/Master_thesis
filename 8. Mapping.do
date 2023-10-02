@@ -359,4 +359,41 @@ id(_ID) fcolor(RdYlGn) ///
 legend(pos(12) row(5) forcesize size(*0.75) ) 
 
 
+* Difference from sex heduc country
+
+clear all
+use "C:\Users\Hannah\Documents\Thesis\data\readytomap.dta"
+
+gen difference = .
+replace difference = -0.1546714 if country == 1
+replace difference = -0.31438 if country == 2
+replace difference = -0.2707306 if country == 3
+replace difference = -0.2092595 if country == 4
+replace difference = -0.316462 if country == 5
+replace difference = -0.1891724 if country == 6
+replace difference = -0.1289337 if country == 7
+replace difference = -0.2343597 if country == 8
+replace difference = -0.2198839 if country == 9
+replace difference = -0.2660071 if country == 10
+replace difference = -0.3177424 if country == 11
+replace difference = -0.2314082 if country == 12
+replace difference = -0.2290629 if country == 13
+replace difference = -0.1351644 if country == 14
+replace difference = -0.2166276 if country == 15
+replace difference = -0.2650037 if country == 16
+replace difference = -0.1729788 if country == 17
+replace difference = -0.1188404 if country == 18
+
+collapse (mean) difference _ID, by(cntry)
+
+
+format(difference) %12.2f // change values displayed in the legend 
+
+spmap difference using "C:\Users\Hannah\Documents\Thesis\data\Map\second try\CNTR_RG_10M_2020_3035.shp\another_shp.dta" , ///
+id(_ID) fcolor(RdYlGn) ///
+legend(pos(12) row(5) forcesize size(*0.75) ) 
+
+ 
+
+
 

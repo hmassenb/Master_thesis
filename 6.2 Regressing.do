@@ -52,17 +52,19 @@ replace rti09 = 1 if rti <= -0.8
 */
 
 * Binary dependent var 
- logit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp 
-// i.country i.year, vce(cluster year )
+ logit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp  i.country i.year, vce(cluster year )
 
 
 * eststo m1: margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post  // heduc coeff  .1428394
 * marginsplot, xline(0)
 
 eststo logit : margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post atmeans // heduc coeff .1487569 
-marginsplot, title("Marginal effects of coefficients with Logit model") ///
-yline(0) xlabel(, angle(45)) ytitle("Pr(heduc=1)") // heduc strongest positive impact s.t. outcome variable is 1 
+marginsplot, ///
+	title("Marginal effects of coefficients with Logit model") ///
+	yline(0)  ytitle("Pr(heduc=1)") /// // heduc strongest positive impact s.t. outcome variable is 1 
+	xlabel(1 "Heduc" 2 "Age" 3 "Gender" 4 "Mothers educ" 5 "Birthplace" 6 "HH income" 7 "Share heduc" 8 "R&D", angle(45))
 
+	
 esttab  m2 using binarymodel.tex 
 
 xtset country 
@@ -206,18 +208,18 @@ esttab female male diff using heterogen_sex.tex, replace ///
 	collab("Female" "Male" "Difference") ///
     title("Descriptive Statistics by Sex") 
 	
-eststo heterosex: reghdfe rti heduc#sex age mo_heduc birthplace 		
+eststo heterosex: reghdfe rti heduc#sex age mo_heduc birthplace ///
 	hh_netincome shareRD share_heduc, ///
 	absorb(country year) vce(cluster country year industry_bins)
 	
-esttab heterosex using heterosex.tex, ///
+esttab heterosex using heterosex.tex, replace ///
 	b(4) se(4)
 	
 coefplot heterosex, ///
 	keep(1.heduc#1.sex 1.heduc#2.sex 0.heduc#1.sex 0.heduc#2.sex) ///
 	baselevels vertical yline(0) mlab mlabcolor(black) ///
 	xlab(1 "Men no Heduc" 2 "Women no Heduc" 3 "Men Heduc" 4 "Women Heduc") ///
-	title("Differences in Sex obtained by Regression")
+	title("Differences in genders importance of education")
 
 * Maybe easier to digest 
 twoway kdensity rti if sex == 1 & heduc == 1,  || ///
@@ -227,10 +229,14 @@ twoway kdensity rti if sex == 1 & heduc == 1,  || ///
         legend(order( 1 "Men heduc" 2 "Women heduc" 3 "Men not heduc" 4 "Women not hedu") ///
 		pos(6) row(1)) ///
 		ytitle("Density RTI") ///
-		title("Differences of RTI across education level and sex")
+		title("Differences of RTI across education level and gender")
 
+*************************
 * MATCHING SEX	
-teffects psmatch (rti) (sex heduc mo_heduc age_groups birthplace hh_netincome country year) ///
+* https://medium.com/@thestataguide/propensity-score-matching-in-stata-ba77178e4611
+*************************
+teffects psmatch (rti) (sex heduc mo_heduc age_groups birthplace hh_netincome i.country i.year) 
+///
  , gen(nn) // .1063726  
 
 predict ps*, ps // * enable saving for each level of sex (women vs men)
@@ -252,11 +258,16 @@ twoway kdensity po0 || kdensity po1 || ///
 	legend(order( 1 "Matched men" 2 "Matched women" 3 "Unmatched men" 4 "Unmatched women"))
 
 graph bar po1 || bar po2
+
+
+gen heduc_labels = ""
+replace heduc_labels = "No higher education" if heduc == 0
+replace heduc_labels = "Higher education" if heduc == 1
 	
-graph bar rti,  over(sex)  over(heduc) ///
-	blabel(bar) title("Differences of RTI across education level and sex") 	///
+graph bar rti,  over(sex)  over(heduc_labels) ///
+	blabel(bar) title("Differences of RTI across gender and education level") 	///
 	b1title("Education Level") ytitle("Mean of RTI") asyvars  ///
-	 bar(1, bcolor(orange*0.9)) bar(2, bcolor(green*0.8)) bar(3, bcolor(gold)) bar(4, bcolor(yellow)) ///
+	 bar(1, bcolor(orange*0.9)) bar(2, bcolor(green*0.8)) ///
 	 legend(pos(6) row(1))
 	  
  di -0.422123 + 0.297194 // -.124929
@@ -303,27 +314,53 @@ teffects nnmatch (rti heduc age mo_heduc hh_netincome birthplace country year) (
 teffects ra  (rti heduc age mo_heduc hh_netincome birthplace country year) (sex)  //  .1117791
 
  * RA 
+ ****************************
 eststo fem:  reghdfe rti heduc  age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp  if sex == 2 , abs(country year) vce(cluster industry_bins country year)
 eststo masc:  reghdfe rti heduc  age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp  if sex == 1 , abs(country year) vce(cluster industry_bins country year)
 twoway line fem heduc || line masc heduc
 
-eststo fem_indu:  reghdfe rti heduc  age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp industry_bins if sex == 2 , abs(country year) vce(cluster industry_bins country year)
-eststo masc_indu: reghdfe rti heduc  age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp industry_bins if sex == 1 , abs(country year) vce(cluster industry_bins country year)
+* eststo fem_indu:  reghdfe rti heduc  age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp industry_bins if sex == 2 , abs(country year) vce(cluster industry_bins country year)
+* eststo masc_indu: reghdfe rti heduc  age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp industry_bins if sex == 1 , abs(country year) vce(cluster industry_bins country year)
 // .0111037 women have a 0,0111 higher importance of heduc 
 * table RA
-esttab fem masc fem_indu masc_indu using ra_hetero_sex.tex, replace ///
+esttab fem masc using ra_hetero_sex.tex, replace ///
 drop(sex) b(4) se(4)
 
 
- 
+* heduc#sex#country
+eststo doubleinteracted: reghdfe rti heduc#sex#country age mo_heduc birthplace hh_netincome share_heduc RDpcppp industry_bins, abs(year) vce(cluster industry_bins country year)
+regsave // Using the betas computing difference in excel simply
+
+****************************
 * hh netincome
 ***********************
-
+* only income
 eststo income_inter: reghdfe rti heduc#hh_netincome mo_heduc age birthplace sex RDpcppp share_heduc, absorb(country year) vce(cluster industry_bins year country) nocons
 
 esttab income_inter using income_hetero.tex, replace ///
 	keep(1.heduc#1.hh_netincome 1.heduc#2.hh_netincome 1.heduc#3.hh_netincome 1.heduc#4.hh_netincome 	 1.heduc#5.hh_netincome ///
 	1.heduc#6.hh_netincome 1.heduc#7.hh_netincome 1.heduc#8.hh_netincome 1.heduc#9.hh_netincome 1.heduc#10.hh_netincome)
+	
+coefplot income_inter, ///
+	drop(_cons age sex mo_heduc share_heduc birthplace RDpcppp share_heduc) ///
+	yline(0) title("Breakdown of RTI by household income") ///
+	vertical mcol(orange) mfcol(orange) ciopts(lcolor(green)) m(circle) ///
+	xlab(1 "1" 2 "2" 3 "3" 4 "4" 5 "5" 6 "6" 7 "7" 8 "8" 9 "9" 10 "10") ///
+	xtitle("Deciles of household income") ytitle("RTI") ///
+	keep(1.heduc#1.hh_netincome 1.heduc#2.hh_netincome 1.heduc#3.hh_netincome 1.heduc#4.hh_netincome 1.heduc#5.hh_netincome ///
+	1.heduc#6.hh_netincome 1.heduc#7.hh_netincome 1.heduc#8.hh_netincome 1.heduc#9.hh_netincome 1.heduc#10.hh_netincome) ///
+	baselevels
+	
+	
+****************************
+* Income and Sex 
+****************************
+eststo income_inter: reghdfe rti heduc#hh_netincome#sex mo_heduc age birthplace sex RDpcppp share_heduc, absorb(country year) vce(cluster industry_bins year country) nocons
+	
+esttab income_inter using income_heterosex.tex, replace ///
+keep(1.heduc#1.hh_netincome#1.sex 1.heduc#2.hh_netincome#1.sex 1.heduc#3.hh_netincome#1.sex 1.heduc#4.hh_netincome#1.sex 1.heduc#5.hh_netincome#1.sex ///
+	1.heduc#6.hh_netincome#1.sex 1.heduc#7.hh_netincome#1.sex 1.heduc#8.hh_netincome#1.sex 1.heduc#9.hh_netincome#1.sex 1.heduc#10.hh_netincome#1.sex 1.heduc#1.hh_netincome#2.sex 1.heduc#2.hh_netincome#2.sex 1.heduc#3.hh_netincome#2.sex 1.heduc#4.hh_netincome#2.sex 1.heduc#5.hh_netincome#2.sex ///
+	1.heduc#6.hh_netincome#2.sex 1.heduc#7.hh_netincome#2.sex 1.heduc#8.hh_netincome#2.sex 1.heduc#9.hh_netincome#2.sex 1.heduc#10.hh_netincome#2.sex )
 
 
 coefplot income_inter, ///
@@ -332,9 +369,11 @@ coefplot income_inter, ///
 	vertical  `colors' ///
 	xlab(1 "1" 2 "2" 3 "3" 4 "4" 5 "5" 6 "6" 7 "7" 8 "8" 9 "9" 10 "10") ///
 	xtitle("Decentile of household income") ytitle("RTI") ///
-	keep(1.heduc#1.hh_netincome 1.heduc#2.hh_netincome 1.heduc#3.hh_netincome 1.heduc#4.hh_netincome 1.heduc#5.hh_netincome ///
-	1.heduc#6.hh_netincome 1.heduc#7.hh_netincome 1.heduc#8.hh_netincome 1.heduc#9.hh_netincome 1.heduc#10.hh_netincome) ///
-	baselevels
+	keep(1.heduc#1.hh_netincome#1.sex 1.heduc#2.hh_netincome#1.sex 1.heduc#3.hh_netincome#1.sex 1.heduc#4.hh_netincome#1.sex 1.heduc#5.hh_netincome#1.sex ///
+	1.heduc#6.hh_netincome#1.sex 1.heduc#7.hh_netincome#1.sex 1.heduc#8.hh_netincome#1.sex 1.heduc#9.hh_netincome#1.sex 1.heduc#10.hh_netincome#1.sex 1.heduc#1.hh_netincome#2.sex 1.heduc#2.hh_netincome#2.sex 1.heduc#3.hh_netincome#2.sex 1.heduc#4.hh_netincome#2.sex 1.heduc#5.hh_netincome#2.sex ///
+	1.heduc#6.hh_netincome#2.sex 1.heduc#7.hh_netincome#2.sex 1.heduc#8.hh_netincome#2.sex 1.heduc#9.hh_netincome#2.sex 1.heduc#10.hh_netincome#2.sex ) ///
+	baselevels  by(sex, cols(1) order(-1 2) vertical)
+* Difference between men and women is consistently across centiles
 	
 graph bar rti, over(hh_netincome, label(angle(45))) ///
 by(heduc, title("RTI for men and women across income decentiles")) ///
