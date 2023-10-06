@@ -31,19 +31,20 @@ graph bar share_heduc, over(country , sort(share_heduc) ) /// check whether matc
 ****************
 
 graph bar (count), over(rti, relab(-1 "-1" 0 "0" 1 "1")) 
-
-
-
 graph bar rti, over(country , sort(rti) ) /// 
 	title("Mean RTI") 
-
 graph bar rti, over(cntry, sort(rti)) by(year) 
-
 graph box rti, by(heduc)
 
-hist rti, title("Histogram of rti")
-hist rti, by(country)title("Histogram of rti")
 
+
+forval i=1/10{
+    local colors "`colors' bar(`i', color(green*`=(`i'/7)'))"
+}
+hist rti, title("Distribution of RTI") bcol(forest_green*0.8)  // graph used for paper
+
+
+hist rti, by(country)title("Histogram of rti")
 egen N_rti1 = count(rti) if rti ==-1, by(country)
 graph bar N_rti1, ///
 	over(country, sort(N_rti1)) ///

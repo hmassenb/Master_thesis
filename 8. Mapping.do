@@ -148,7 +148,7 @@ format(coeff_bin) %12.2f
 
 spmap coeff_bin using "C:\Users\Hannah\Documents\Thesis\data\Map\second try\CNTR_RG_10M_2020_3035.shp\another_shp.dta" , ///
 id(_ID) fcolor(RdYlGn)  ///
-clm(custom) clb(-0.35 -0.28 -0.22  -0.17 -0.11) legend(pos(12) row(5) forcesize size(*0.75) ) 
+clm(custom) clb(-0.28 -0.22  -0.17 -0.11) legend(pos(12) row(5) forcesize size(*0.75) ) 
 
 
 
@@ -365,24 +365,24 @@ clear all
 use "C:\Users\Hannah\Documents\Thesis\data\readytomap.dta"
 
 gen difference = .
-replace difference = -0.1546714 if country == 1
-replace difference = -0.31438 if country == 2
-replace difference = -0.2707306 if country == 3
-replace difference = -0.2092595 if country == 4
-replace difference = -0.316462 if country == 5
-replace difference = -0.1891724 if country == 6
-replace difference = -0.1289337 if country == 7
-replace difference = -0.2343597 if country == 8
-replace difference = -0.2198839 if country == 9
-replace difference = -0.2660071 if country == 10
-replace difference = -0.3177424 if country == 11
-replace difference = -0.2314082 if country == 12
-replace difference = -0.2290629 if country == 13
-replace difference = -0.1351644 if country == 14
-replace difference = -0.2166276 if country == 15
-replace difference = -0.2650037 if country == 16
-replace difference = -0.1729788 if country == 17
-replace difference = -0.1188404 if country == 18
+replace difference = -0.0071 if country == 1
+replace difference = 0.0187 if country == 2
+replace difference = 0.0156 if country == 3
+replace difference = -0.0033 if country == 4
+replace difference = -0.0653 if country == 5
+replace difference = -0.0249 if country == 6
+replace difference = -0.1636 if country == 7
+replace difference = -0.0149 if country == 8
+replace difference = -0.0315 if country == 9
+replace difference = -0.0656 if country == 10
+replace difference = -0.1773 if country == 11
+replace difference = -0.1231 if country == 12
+replace difference = 0.0965 if country == 13
+replace difference = 0.0419 if country == 14
+replace difference = 0.0778 if country == 15
+replace difference = 0.1019 if country == 16
+replace difference = 0.0259 if country == 17
+replace difference = -0.0274 if country == 18
 
 collapse (mean) difference _ID, by(cntry)
 

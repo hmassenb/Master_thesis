@@ -137,7 +137,8 @@ eststo inter_country: reghdfe rti country#heduc age sex mo_heduc birthplace hh_n
 coefplot inter_country, ///
 drop(_cons age sex mo_heduc hh_netincome citizenship share_heduc birthplace RDpcppp) ///
  yline(0) title("Regression results for each country") vertical sort ///
-coeflab(,truncate(2)) xlabel(, angle())  
+coeflab(,truncate(2)) xlabel(, angle()) ///
+col(green) mfcolor(green)  ciopts(color(orange))
 
 
 

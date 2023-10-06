@@ -7,6 +7,8 @@ use "$ess\data0407.dta" // from 4.2 Tasking mihaylov table
 cd "C:\Users\Hannah\Documents\Thesis"
 set scheme cleanplots
 
+
+
 ******************************
 * destring variables
 drop if _merge==1
@@ -122,8 +124,9 @@ ssc install grqreg, replace
 xi: qreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc ///
 RDpcppp i.year i.country, vce(robust) quantile(0.25) // not nice as not very continous outcome variable 
 
-eststo fifty: qreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, vce(robust) quantile(0.5)
-grqreg heduc,  ci ols 
+qui: eststo fifty: qreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, vce(robust) quantile(0.5)
+grqreg heduc,  ci ols ///
+ lcol(orange)
 
 eststo sevenfive: qreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp i.year i.country, vce(robust) quantile(0.75)
 
@@ -219,7 +222,8 @@ coefplot heterosex, ///
 	keep(1.heduc#1.sex 1.heduc#2.sex 0.heduc#1.sex 0.heduc#2.sex) ///
 	baselevels vertical yline(0) mlab mlabcolor(black) ///
 	xlab(1 "Men no Heduc" 2 "Women no Heduc" 3 "Men Heduc" 4 "Women Heduc") ///
-	title("Differences in genders importance of education")
+	title("Differences in genders importance of education") ///
+	col(green) mfcolor(green)  ciopts(color(orange))
 
 * Maybe easier to digest 
 twoway kdensity rti if sex == 1 & heduc == 1,  || ///
@@ -230,14 +234,37 @@ twoway kdensity rti if sex == 1 & heduc == 1,  || ///
 		pos(6) row(1)) ///
 		ytitle("Density RTI") ///
 		title("Differences of RTI across education level and gender")
+		
+		
+		
+************************************************************
+** Table with coefficients per sex and each country 
+************************************************************
+eststo countrymen: reghdfe rti heduc#country age mo_heduc birthplace hh_netincome shareRD share_heduc ///
+	if sex == 1, ///
+	absorb(year) vce(cluster country year industry_bins)
+	
+eststo countrywomen: reghdfe rti heduc#country age mo_heduc birthplace hh_netincome shareRD share_heduc ///
+	if sex == 2, ///
+	absorb(year) vce(cluster country year industry_bins)
+
+esttab countrymen countrywomen using countrysex.tex, ///
+	nogaps label  /// 
+	keep(1.heduc#1.country 1.heduc#2.country 1.heduc#3.country 1.heduc#4.country ///
+	1.heduc#5.country 1.heduc#6.country 1.heduc#7.country ///
+	1.heduc#8.country 1.heduc#9.country 1.heduc#10.country ///
+	1.heduc#11.country 1.heduc#12.country 1.heduc#13.country ///
+	1.heduc#14.country 1.heduc#15.country 1.heduc#16.country ///
+	1.heduc#17.country 1.heduc#18.country age mo_heduc birthplace hh_netincome share_heduc shareRD ) ///
+	title(Coefficients) ///
+	b(4) se(4)
 
 *************************
 * MATCHING SEX	
 * https://medium.com/@thestataguide/propensity-score-matching-in-stata-ba77178e4611
 *************************
-teffects psmatch (rti) (sex heduc mo_heduc age_groups birthplace hh_netincome i.country i.year) 
-///
- , gen(nn) // .1063726  
+teffects psmatch (rti) (sex heduc mo_heduc age_groups birthplace hh_netincome country year) ///
+ , gen(nn) // .1046479  
 
 predict ps*, ps // * enable saving for each level of sex (women vs men)
 predict po*, po 
@@ -251,6 +278,8 @@ tebalance density rti, legend(row(1) pos(6))
 * , legend(order( 1 "TE men" 2 "TE women")) // difference in treatment effect 
 
 twoway kdensity ps1 || kdensity ps2
+twoway kdensity po0 || kdensity po1
+
 
 tebalance density
 twoway kdensity po0 || kdensity po1 || ///
@@ -267,7 +296,7 @@ replace heduc_labels = "Higher education" if heduc == 1
 graph bar rti,  over(sex)  over(heduc_labels) ///
 	blabel(bar) title("Differences of RTI across gender and education level") 	///
 	b1title("Education Level") ytitle("Mean of RTI") asyvars  ///
-	 bar(1, bcolor(orange*0.9)) bar(2, bcolor(green*0.8)) ///
+	 bar(1, bcolor(orange)) bar(2, bcolor(green)) ///
 	 legend(pos(6) row(1))
 	  
  di -0.422123 + 0.297194 // -.124929
@@ -326,7 +355,6 @@ twoway line fem heduc || line masc heduc
 esttab fem masc using ra_hetero_sex.tex, replace ///
 drop(sex) b(4) se(4)
 
-
 * heduc#sex#country
 eststo doubleinteracted: reghdfe rti heduc#sex#country age mo_heduc birthplace hh_netincome share_heduc RDpcppp industry_bins, abs(year) vce(cluster industry_bins country year)
 regsave // Using the betas computing difference in excel simply
@@ -350,6 +378,29 @@ coefplot income_inter, ///
 	keep(1.heduc#1.hh_netincome 1.heduc#2.hh_netincome 1.heduc#3.hh_netincome 1.heduc#4.hh_netincome 1.heduc#5.hh_netincome ///
 	1.heduc#6.hh_netincome 1.heduc#7.hh_netincome 1.heduc#8.hh_netincome 1.heduc#9.hh_netincome 1.heduc#10.hh_netincome) ///
 	baselevels
+
+******************************************************
+* main graph diverging behavior depending on heduc
+
+egen mean_rti = mean(rti) , by(hh_netincome heduc)
+ 
+twoway scatter mean_rti hh_netincome if heduc == 0, col(green) fcol(green) ///
+|| scatter mean_rti hh_netincome if heduc == 1, col(orange) fcol(orange) ///
+	title("Difference in RTI across income and education") ///
+	legend(order(1 "No tertiary education" 2 "With tertiary education") nobox ///
+	 pos(6) row(1)) ytitle("Mean of RTI")
+
+* how many obs I have per decentile depending on heduc
+hist hh_netincome , freq by(heduc)
+
+forval i=1/10{
+    local colors "`colors' bar(`i', color(green*`=(`i'/7)'))"
+}
+graph bar rti, over(hh_netincome) bar(1, col(green*0.7)) ///
+asyvars `colors' title("RTI over income decentiles") ///
+legend(pos(3) row(10) nobox ///
+order(1 "1st" 2 "2nd" 3 "3rd" 4 "4th" 5 "5th" 6 "6th" 7 "7th" 8 "8th" 9 "9th" 10 "10th" ))
+
 	
 	
 ****************************
@@ -381,25 +432,8 @@ bar(1, fcolor(green)) bar(2, fcolor(orange)) ///
 ascategory asyvars ytitle("Mean of RTI") legend(row(1))
 
 
-egen mean_rti = mean(rti) , by(hh_netincome heduc)
 
-* main graph diverging behavior depending on heduc 
-twoway scatter mean_rti hh_netincome if heduc == 0, col(green) fcol(green) ///
-|| scatter mean_rti hh_netincome if heduc == 1, col(orange) fcol(orange) ///
-	title("Difference in RTI across income and education") ///
-	legend(order(1 "No tertiary education" 2 "With tertiary education") nobox ///
-	 pos(6) row(1)) ytitle("Mean of RTI")
-
-* how many obs I have per decentile depending on heduc
-hist hh_netincome , freq by(heduc)
-
-forval i=1/10{
-    local colors "`colors' bar(`i', color(green*`=(`i'/7)'))"
-}
-graph bar rti, over(hh_netincome) bar(1, col(green*0.7)) ///
-asyvars `colors' title("RTI over income decentiles") ///
-legend(pos(3) row(10) nobox ///
-order(1 "1st" 2 "2nd" 3 "3rd" 4 "4th" 5 "5th" 6 "6th" 7 "7th" 8 "8th" 9 "9th" 10 "10th" ))
+***************************************************
 
 
 * Migration 
