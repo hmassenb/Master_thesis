@@ -54,26 +54,23 @@ replace rti09 = 1 if rti <= -0.8
 */
 
 * Binary dependent var 
- logit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp  i.country i.year, vce(cluster year )
+ logit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp  i.country i.year, vce(cluster country)
 
-
-* eststo m1: margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post  // heduc coeff  .1428394
-* marginsplot, xline(0)
-
-eststo logit : margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post atmeans // heduc coeff .1487569 
+* atmeans = effect computed at the average of the covariates "Avg individual"
+eststo logit : margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post  // heduc coeff .1487569 
 marginsplot, ///
 	title("Marginal effects of coefficients with Logit model") ///
 	yline(0)  ytitle("Pr(heduc=1)") /// // heduc strongest positive impact s.t. outcome variable is 1 
 	xlabel(1 "Heduc" 2 "Age" 3 "Gender" 4 "Mothers educ" 5 "Birthplace" 6 "HH income" 7 "Share heduc" 8 "R&D", angle(45))
 
 	
-esttab  m2 using binarymodel.tex 
-
-xtset country 
-xtlogit binary_rti heduc age i.sex i.mo_heduc i.birthplace c.hh_netincome share_heduc RDpcppp i.year 
-margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post //  .1435542 
-
-
+ logit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp  i.country i.year, vce(cluster country)
+eststo logit : margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post  // heduc coeff  .1428394
+marginsplot, ///
+	title("Marginal effects of coefficients with Logit model") ///
+	yline(0)  ytitle("Pr(heduc=1)") /// // heduc strongest positive impact s.t. outcome variable is 1 
+	xlabel(1 "Heduc" 2 "Age" 3 "Gender" 4 "Mothers educ" 5 "Birthplace" 6 "HH income" 7 "Share heduc" 8 "R&D", angle(45))
+	
 /*
 gen rti_poisson = rti + 1.01
 gen log_rtitransi = log(rti_poisson)
@@ -124,9 +121,8 @@ ssc install grqreg, replace
 xi: qreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc ///
 RDpcppp i.year i.country, vce(robust) quantile(0.25) // not nice as not very continous outcome variable 
 
-qui: eststo fifty: qreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, vce(robust) quantile(0.5)
-grqreg heduc,  ci ols ///
- lcol(orange)
+ eststo fifty: qreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp, vce(robust) quantile(0.5)
+grqreg heduc,  ci ols 
 
 eststo sevenfive: qreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp i.year i.country, vce(robust) quantile(0.75)
 
@@ -264,7 +260,7 @@ esttab countrymen countrywomen using countrysex.tex, ///
 * https://medium.com/@thestataguide/propensity-score-matching-in-stata-ba77178e4611
 *************************
 teffects psmatch (rti) (sex heduc mo_heduc age_groups birthplace hh_netincome country year) ///
- , gen(nn) // .1046479  
+ , gen(nn) // .1063726 
 
 predict ps*, ps // * enable saving for each level of sex (women vs men)
 predict po*, po 
@@ -295,7 +291,7 @@ replace heduc_labels = "Higher education" if heduc == 1
 	
 graph bar rti,  over(sex)  over(heduc_labels) ///
 	blabel(bar) title("Differences of RTI across gender and education level") 	///
-	b1title("Education Level") ytitle("Mean of RTI") asyvars  ///
+	b1title("Level of Education") ytitle("Mean of RTI") asyvars  ///
 	 bar(1, bcolor(orange)) bar(2, bcolor(green)) ///
 	 legend(pos(6) row(1))
 	  

@@ -30,7 +30,7 @@ gen avgrti2012 = avgrti if year == 2012
 egen avgrti2012_country = mean(avgrti2012), by(country)
 replace avgrti2012 = avgrti2012_country
 
-gen growth = (avgrti2018 - avgrti2012) / 6  
+gen growth = (avgrti2018 - avgrti2012)  /6
 
 twoway scatter  growth avgrti2012, ///
 mlab(country) msymbol(smcircle) ///
