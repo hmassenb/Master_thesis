@@ -380,8 +380,8 @@ coefplot income_inter, ///
 
 egen mean_rti = mean(rti) , by(hh_netincome heduc)
  
-twoway scatter mean_rti hh_netincome if heduc == 0, col(green) fcol(green) ///
-|| scatter mean_rti hh_netincome if heduc == 1, col(orange) fcol(orange) ///
+twoway scatter mean_rti hh_netincome if heduc == 0, col(green) fcol(green) || ///
+scatter mean_rti hh_netincome if heduc == 1, col(orange) fcol(orange) msymbol(X) ///
 	title("Difference in RTI across income and education") ///
 	legend(order(1 "No tertiary education" 2 "With tertiary education") nobox ///
 	 pos(6) row(1)) ytitle("Mean of RTI")

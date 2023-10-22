@@ -169,10 +169,44 @@ estpost summarize $diffmeancov
 eststo diff
 local diff
 
+// T-test between high and non-high
+ttest age, by(heduc) //   t =  28.8374
+ttest sex, by(heduc) //  t = -18.2737
+ttest mo_heduc, by(heduc) // t = -46.2855
+ttest birthplace, by(heduc) // -7.8523
+ttest hh_netincome, by(heduc) //   t = -77.8372
+ttest rti, by(heduc) //   t =  49.0352
+ttest nra, by(heduc) //  t = 130
+ttest nri, by(heduc) // -94.5740
+ttest nrm, by(heduc) //  106.3814
+ttest rc, by(heduc) //  20.7312
+ttest rm, by(heduc) //  t =  53.6846
+
+gen t_age = 28.8374
+gen t_sex =  -18.2737
+gen t_mo_heduc = -46.2855
+gen t_birthplace = -7.8523
+gen t_hh_netincome =  -77.8372
+gen t_rti = 49.0352
+gen t_nra = 130
+gen t_nri =  -94.5740
+gen t_nrm =  106.3814
+gen t_rc =   20.7312
+gen t_rm = 53.6846
+
+global ttests ///
+t_age t_sex t_mo_heduc t_birthplace t_hh_netincome t_rti t_nra t_nri t_nrm t_rm t_rc
+
+summarize  $ttests
+estpost summarize $ttests
+eststo ttests
+local ttests
+
+
 // Now use esttab to create the table with the new difference row
-esttab  nonhigh high diff using descri.tex, replace ///
+esttab  nonhigh high diff ttests using descri.tex, replace ///
 	cells("mean(fmt(%6.2f))") label ///
-    mtitles("Non-High" "High" "Difference") ///
+    mtitles("Non-High" "High" "Difference" "T-test") ///
     title("Comparison of Means") ///
     stats(N ,labels("Observations")) ///
     nonum
