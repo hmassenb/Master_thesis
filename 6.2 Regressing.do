@@ -60,8 +60,8 @@ replace rti09 = 1 if rti <= -0.8
 eststo logit : margins, dydx(heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp) post  // heduc coeff .1487569 
 marginsplot, ///
 	title("Marginal effects of coefficients with Logit model") ///
-	yline(0)  ytitle("Pr(heduc=1)") /// // heduc strongest positive impact s.t. outcome variable is 1 
-	xlabel(1 "Heduc" 2 "Age" 3 "Gender" 4 "Mothers educ" 5 "Birthplace" 6 "HH income" 7 "Share heduc" 8 "R&D", angle(45))
+	yline(0)  ytitle("Pr( RTI = -1)") /// // heduc strongest positive impact s.t. outcome variable is 1 
+	xlabel(1 "Heduc" 2 "Age" 3 "Gender" 4 "Mother Heduc" 5 "Birthplace" 6 "HH income" 7 "Heduc %" 8 "R&D", angle(45))
 
 	
  logit binary_rti heduc age sex mo_heduc birthplace hh_netincome share_heduc RDpcppp  i.country i.year, vce(cluster country)
