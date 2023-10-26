@@ -118,6 +118,11 @@ marginsplot
 *********************
 ssc install grqreg, replace 
 
+* unconditional
+qreg rti heduc
+grqreg heduc, ci ols
+
+* conditional
 xi: qreg rti heduc age sex mo_heduc birthplace hh_netincome share_heduc ///
 RDpcppp i.year i.country, vce(robust) quantile(0.25) // not nice as not very continous outcome variable 
 

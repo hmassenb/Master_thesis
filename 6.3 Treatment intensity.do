@@ -32,7 +32,21 @@ esttab inkremental using inkremental.tex, replace ///
 b(4) se(4) 
 
 coefplot inkremental, ///
-drop(_cons)
+	drop(_cons) vertical yline(0) ///
+	xlab(1 "ISCED 5" 2 "ISCED 6" 3 "ISCED 7" 4 "Age" 5 "Gender" ///
+	6 "Mo.Heduc" 7 "Birthplace" 8 "Income" 9 "Heduc %" 10 "R&D") ///
+	col(green) mfcolor(green) msymbol(circle) ciopts(color(orange)) ///
+	title("Regression results of treatment intensity")
+
+coefplot heterosex, ///
+	keep(1.heduc#1.sex 1.heduc#2.sex 0.heduc#1.sex 0.heduc#2.sex) ///
+	baselevels vertical yline(0) mlab mlabcolor(black) ///
+	title("Differences in genders importance of education") ///
+	col(green) mfcolor(orange)  ciopts(color(orange))
+
+	
+
+
 
 
 * interacted with country -> very nice 
