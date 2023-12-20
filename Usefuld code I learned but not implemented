@@ -1,5 +1,0 @@
-Adding significance levels to coefplot 
-mlab((cond(@pval<.001, "<0.001" + "***", ///
-cond(@pval<.01, string(@pval,"%9.3f") + "**", ///
-cond(@pval<.05, string(@pval,"%9.3f") + "*", ///
-string(@pval,"%9.3f")))))
